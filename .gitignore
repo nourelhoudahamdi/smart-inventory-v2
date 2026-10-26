@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Local database
+database/inventory.db
+database/inventory.db-shm
+database/inventory.db-wal
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+
