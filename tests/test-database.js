@@ -10,6 +10,7 @@ db.exec(`    CREATE TABLE products (
         name TEXT NOT NULL,
         quantity INTEGER NOT NULL DEFAULT 0,
         price REAL NOT NULL DEFAULT 0,
+        min_stock INTEGER NOT NULL DEFAULT 5 CHECK (min_stock >= 0),
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );`);
 

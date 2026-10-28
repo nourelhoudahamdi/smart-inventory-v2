@@ -8,10 +8,17 @@ try {
 const products = db.prepare("SELECT * FROM products").all();
 
 
+    const productsWithStatus = products.map((product) => ({
+        ...product,
+        stock_status: product.quantity <= product.min_stock
+            ? "Low Stock"
+            : "Normal"
+    }));
+
     res.json({
         status: "success",
-        count: products.length,
-        data: products
+        count: productsWithStatus.length,
+        data: productsWithStatus
     });
 } catch (error) {
     console.error("Error fetching products:", error.message);
@@ -24,9 +31,14 @@ const products = db.prepare("SELECT * FROM products").all();
 
 
 };
+
+// Create a product
 const createProduct = (req, res) => {
 try {
 const { name, quantity, price } = req.body;
+const min_stock = req.body.min_stock === undefined
+? 5
+: req.body.min_stock;
 
 
     if (
@@ -36,7 +48,9 @@ const { name, quantity, price } = req.body;
         quantity < 0 ||
         typeof price !== "number" ||
         !Number.isFinite(price) ||
-        price < 0
+        price < 0 ||
+        !Number.isInteger(min_stock) ||
+        min_stock < 0
     ) {
         return res.status(400).json({
             status: "error",
@@ -45,9 +59,9 @@ const { name, quantity, price } = req.body;
     }
 
     const result = db.prepare(`
-        INSERT INTO products (name, quantity, price)
-        VALUES (?, ?, ?)
-    `).run(name.trim(), quantity, price);
+        INSERT INTO products (name, quantity, price, min_stock)
+        VALUES (?, ?, ?, ?)
+    `).run(name.trim(), quantity, price, min_stock);
 
     const newProduct = db.prepare(
         "SELECT * FROM products WHERE id = ?"
@@ -56,10 +70,15 @@ const { name, quantity, price } = req.body;
     res.status(201).json({
         status: "success",
         message: "Product added successfully",
-        data: newProduct
+        data: {
+            ...newProduct,
+            stock_status: newProduct.quantity <= newProduct.min_stock
+                ? "Low Stock"
+                : "Normal"
+        }
     });
 } catch (error) {
-    console.error("Error adding product:", error.message);
+    console.error("Error adding products:", error.message);
 
     res.status(500).json({
         status: "error",
@@ -70,10 +89,14 @@ const { name, quantity, price } = req.body;
 
 };
 
+// Update a product
 const updateProduct = (req, res) => {
 try {
 const id = Number(req.params.id);
 const { name, quantity, price } = req.body;
+const min_stock = req.body.min_stock === undefined
+? 5
+: req.body.min_stock;
 
 
     if (
@@ -81,7 +104,9 @@ const { name, quantity, price } = req.body;
         typeof name !== "string" || name.trim() === "" ||
         !Number.isInteger(quantity) || quantity < 0 ||
         typeof price !== "number" ||
-        !Number.isFinite(price) || price < 0
+        !Number.isFinite(price) || price < 0 ||
+        !Number.isInteger(min_stock) ||
+        min_stock < 0
     ) {
         return res.status(400).json({
             status: "error",
@@ -91,9 +116,9 @@ const { name, quantity, price } = req.body;
 
     const result = db.prepare(`
         UPDATE products
-        SET name = ?, quantity = ?, price = ?
+        SET name = ?, quantity = ?, price = ?, min_stock = ?
         WHERE id = ?
-    `).run(name.trim(), quantity, price, id);
+    `).run(name.trim(), quantity, price, min_stock, id);
 
     if (result.changes === 0) {
         return res.status(404).json({
@@ -109,7 +134,12 @@ const { name, quantity, price } = req.body;
     res.json({
         status: "success",
         message: "Product updated successfully",
-        data: updatedProduct
+        data: {
+            ...updatedProduct,
+            stock_status: updatedProduct.quantity <= updatedProduct.min_stock
+                ? "Low Stock"
+                : "Normal"
+        }
     });
 } catch (error) {
     console.error("Error updating product:", error.message);
@@ -123,6 +153,7 @@ const { name, quantity, price } = req.body;
 
 };
 
+// Delete a product
 const deleteProduct = (req, res) => {
 try {
 const id = Number(req.params.id);
@@ -162,10 +193,10 @@ const id = Number(req.params.id);
 
 };
 
-
 module.exports = {
-    getAllProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct
+getAllProducts,
+createProduct,
+updateProduct,
+deleteProduct
 };
+
