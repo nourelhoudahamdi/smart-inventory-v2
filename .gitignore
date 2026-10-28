@@ -5,6 +5,7 @@ node_modules/
 database/inventory.db
 database/inventory.db-shm
 database/inventory.db-wal
+database/*.backup.db
 
 # Environment variables and secrets
 .env
