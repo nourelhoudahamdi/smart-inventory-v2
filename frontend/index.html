@@ -102,6 +102,31 @@
         <section>
             <h2>Products</h2>
 
+
+            <div class="products-controls">
+                <div>
+                    <label for="search-product">Search Product</label>
+                    <input
+                        type="search"
+                        id="search-product"
+                        placeholder="Search by product name..."
+                    >
+                </div>
+
+                <div>
+                    <label for="filter-stock-status">Filter by Stock Status</label>
+                    <select id="filter-stock-status">
+                        <option value="all">All Products</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Low Stock">Low Stock</option>
+                    </select>
+                </div>
+
+                <button type="button" id="reset-filters">Reset Filters</button>
+                </div>
+
+
+
             <div class="table-container">
                 <table>
                     <thead>

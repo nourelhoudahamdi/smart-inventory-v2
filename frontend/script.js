@@ -1,5 +1,19 @@
 const API_URL = "http://localhost:3000/api/products";
 
+// Store the products fetched from the API.
+let allProducts = [];
+
+// Get the HTML elements used by search and filtering.
+const searchInput = document.getElementById("search-product");
+const stockFilter = document.getElementById("filter-stock-status");
+const resetFiltersButton = document.getElementById("reset-filters");
+
+// Get dashboard elements.
+const totalProductsElement = document.getElementById("total-products");
+const totalQuantityElement = document.getElementById("total-quantity");
+const inventoryValueElement = document.getElementById("inventory-value");
+const lowStockCountElement = document.getElementById("low-stock-count");
+
 // Load dashboard statistics from the API.
 async function loadDashboard() {
     try {
@@ -21,26 +35,28 @@ async function loadDashboard() {
 
         const inventoryValue = products.reduce(
             (total, product) =>
-                total + Number(product.quantity) * Number(product.price),
+                total +
+                Number(product.quantity) * Number(product.price),
             0
         );
 
         const lowStockCount = products.filter(
-            (product) => Number(product.quantity) <= Number(product.min_stock)
+            (product) =>
+                Number(product.quantity) <= Number(product.min_stock)
         ).length;
 
-        document.getElementById("total-products").textContent =
+        totalProductsElement.textContent =
             totalProducts.toLocaleString("en-US");
 
-        document.getElementById("total-quantity").textContent =
+        totalQuantityElement.textContent =
             totalQuantity.toLocaleString("en-US");
 
-        document.getElementById("inventory-value").textContent =
+        inventoryValueElement.textContent =
             inventoryValue.toLocaleString("en-US", {
                 maximumFractionDigits: 2
             }) + " MAD";
 
-        document.getElementById("low-stock-count").textContent =
+        lowStockCountElement.textContent =
             lowStockCount.toLocaleString("en-US");
 
     } catch (error) {
@@ -48,7 +64,7 @@ async function loadDashboard() {
     }
 }
 
-// Load products and display their stock status.
+// Load all products from the API.
 async function loadProducts() {
     const tableBody = document.getElementById("products-table-body");
 
@@ -60,68 +76,9 @@ async function loadProducts() {
         }
 
         const result = await response.json();
-        const products = result.data;
 
-        tableBody.innerHTML = "";
-
-        if (products.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8">No products found.</td>
-                </tr>
-            `;
-            return;
-        }
-
-        products.forEach((product) => {
-            const row = document.createElement("tr");
-
-            const stockStatus = product.stock_status ||
-                (Number(product.quantity) <= Number(product.min_stock)
-                    ? "Low Stock"
-                    : "Normal");
-
-            const statusClass = stockStatus === "Low Stock"
-                ? "low-stock"
-                : "normal-stock";
-
-            row.innerHTML = `
-                <td>${product.id}</td>
-                <td></td>
-                <td>${product.quantity}</td>
-                <td>${product.min_stock}</td>
-                <td>${Number(product.price).toLocaleString("en-US")} MAD</td>
-                <td>
-                    <span class="stock-badge ${statusClass}">
-                        ${stockStatus}
-                    </span>
-                </td>
-                <td></td>
-                <td>
-                    <button
-                        type="button"
-                        class="edit-button"
-                        data-id="${product.id}"
-                    >
-                        Edit
-                    </button>
-
-                    <button
-                        type="button"
-                        class="delete-button"
-                        data-id="${product.id}"
-                    >
-                        Delete
-                    </button>
-                </td>
-            `;
-
-            // Use textContent for product data rather than inserting it as HTML.
-            row.cells[1].textContent = product.name;
-            row.cells[6].textContent = product.created_at || "";
-
-            tableBody.appendChild(row);
-        });
+        allProducts = result.data;
+        renderProducts();
 
     } catch (error) {
         console.error("Error loading products:", error);
@@ -136,9 +93,121 @@ async function loadProducts() {
     }
 }
 
-// Load data when the page opens.
-loadProducts();
-loadDashboard();
+// Display products according to the search and stock filter.
+function renderProducts() {
+    const tableBody = document.getElementById("products-table-body");
+
+    const searchText = searchInput.value.trim().toLowerCase();
+    const selectedStatus = stockFilter.value;
+
+    const filteredProducts = allProducts.filter((product) => {
+        const matchesName = String(product.name)
+            .toLowerCase()
+            .includes(searchText);
+
+        const stockStatus = product.stock_status ||
+            (
+                Number(product.quantity) <= Number(product.min_stock)
+                    ? "Low Stock"
+                    : "Normal"
+            );
+
+        const matchesStatus =
+            selectedStatus === "all" ||
+            stockStatus === selectedStatus;
+
+        return matchesName && matchesStatus;
+    });
+
+    tableBody.innerHTML = "";
+
+    if (filteredProducts.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="8">No matching products found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    filteredProducts.forEach((product) => {
+        const row = document.createElement("tr");
+
+        const stockStatus = product.stock_status ||
+            (
+                Number(product.quantity) <= Number(product.min_stock)
+                    ? "Low Stock"
+                    : "Normal"
+            );
+
+        const statusClass =
+            stockStatus === "Low Stock" ? "low-stock" : "normal-stock";
+
+        row.innerHTML = `
+            <td>${product.id}</td>
+            <td></td>
+            <td>${product.quantity}</td>
+            <td>${product.min_stock}</td>
+            <td>${Number(product.price).toLocaleString("en-US")} MAD</td>
+            <td>
+                <span class="stock-badge ${statusClass}">
+                    ${stockStatus}
+                </span>
+            </td>
+            <td></td>
+            <td>
+                <button
+                    type="button"
+                    class="edit-button"
+                    data-id="${product.id}"
+                >
+                    Edit
+                </button>
+
+                <button
+                    type="button"
+                    class="delete-button"
+                    data-id="${product.id}"
+                >
+                    Delete
+                </button>
+            </td>
+        `;
+
+        // Insert text safely into the product table.
+        row.cells[1].textContent = product.name;
+        row.cells[6].textContent = product.created_at || "";
+
+        tableBody.appendChild(row);
+    });
+}
+
+// Search products by name.
+searchInput.addEventListener("input", () => {
+    renderProducts();
+});
+
+// Filter products by stock status.
+stockFilter.addEventListener("change", () => {
+    renderProducts();
+});
+
+// Reset search and filter controls.
+resetFiltersButton.addEventListener("click", () => {
+    searchInput.value = "";
+    stockFilter.value = "all";
+    renderProducts();
+});
+
+// Load the products and dashboard when the page opens.
+async function initializeDashboard() {
+    await Promise.all([
+        loadProducts(),
+        loadDashboard()
+    ]);
+}
+
+initializeDashboard();
 
 // Handle Add Product form submissions.
 const addProductForm = document.getElementById("add-product-form");
@@ -148,9 +217,12 @@ addProductForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const name = document.getElementById("product-name").value.trim();
-    const quantityInput = document.getElementById("product-quantity").value;
-    const priceInput = document.getElementById("product-price").value;
-    const minStockInput = document.getElementById("product-min-stock").value;
+    const quantityInput =
+        document.getElementById("product-quantity").value;
+    const priceInput =
+        document.getElementById("product-price").value;
+    const minStockInput =
+        document.getElementById("product-min-stock").value;
 
     const quantity = Number(quantityInput);
     const price = Number(priceInput);
@@ -203,8 +275,10 @@ addProductForm.addEventListener("submit", async (event) => {
         addProductForm.reset();
         document.getElementById("product-min-stock").value = "5";
 
-        await loadProducts();
-        await loadDashboard();
+        await Promise.all([
+            loadProducts(),
+            loadDashboard()
+        ]);
 
     } catch (error) {
         console.error("Error adding product:", error);
@@ -244,25 +318,32 @@ document
                 return;
             }
 
-            const name = prompt("Enter the new product name:", product.name);
+            const name = prompt(
+                "Enter the new product name:",
+                product.name
+            );
+
             if (name === null) return;
 
             const quantityInput = prompt(
                 "Enter the new quantity:",
                 product.quantity
             );
+
             if (quantityInput === null) return;
 
             const priceInput = prompt(
                 "Enter the new price (MAD):",
                 product.price
             );
+
             if (priceInput === null) return;
 
             const minStockInput = prompt(
                 "Enter the minimum stock:",
                 product.min_stock
             );
+
             if (minStockInput === null) return;
 
             const quantity = Number(quantityInput);
@@ -304,14 +385,18 @@ document
             const updateResult = await updateResponse.json();
 
             if (!updateResponse.ok) {
-                alert(updateResult.message || "Could not update product.");
+                alert(
+                    updateResult.message || "Could not update product."
+                );
                 return;
             }
 
             alert("Product updated successfully!");
 
-            await loadProducts();
-            await loadDashboard();
+            await Promise.all([
+                loadProducts(),
+                loadDashboard()
+            ]);
 
         } catch (error) {
             console.error("Error updating product:", error);
@@ -346,18 +431,21 @@ document
             const result = await response.json();
 
             if (!response.ok) {
-                alert(result.message || "Could not delete product.");
+                alert(
+                    result.message || "Could not delete product."
+                );
                 return;
             }
 
             alert("Product deleted successfully!");
 
-            await loadProducts();
-            await loadDashboard();
+            await Promise.all([
+                loadProducts(),
+                loadDashboard()
+            ]);
 
         } catch (error) {
             console.error("Error deleting product:", error);
             alert("Could not connect to the server.");
         }
     });
-
