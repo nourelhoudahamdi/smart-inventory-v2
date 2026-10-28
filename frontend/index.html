@@ -35,11 +35,13 @@
                     <h3>Inventory Value</h3>
                     <p id="inventory-value">0 MAD</p>
                 </div>
+
+                <div class="stat-card">
+                    <h3>Low Stock Products</h3>
+                    <p id="low-stock-count">0</p>
+                </div>
             </div>
-
-
         </section>
-
 
         <section>
             <h2>Add New Product</h2>
@@ -52,7 +54,7 @@
                         id="product-name"
                         placeholder="Enter product name"
                         required
-            >
+                    >
                 </div>
 
                 <div>
@@ -79,6 +81,18 @@
                     >
                 </div>
 
+                <div>
+                    <label for="product-min-stock">Minimum Stock</label>
+                    <input
+                        type="number"
+                        id="product-min-stock"
+                        min="0"
+                        step="1"
+                        value="5"
+                        required
+                    >
+                </div>
+
                 <button type="submit">Add Product</button>
             </form>
 
@@ -95,7 +109,9 @@
                             <th>ID</th>
                             <th>Product Name</th>
                             <th>Quantity</th>
+                            <th>Minimum Stock</th>
                             <th>Price (MAD)</th>
+                            <th>Stock Status</th>
                             <th>Created At</th>
                             <th>Actions</th>
                         </tr>
@@ -103,7 +119,7 @@
 
                     <tbody id="products-table-body">
                         <tr>
-                            <td colspan="6">Loading products...</td>
+                            <td colspan="8">Loading products...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -111,6 +127,7 @@
         </section>
     </main>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
+

@@ -1,9 +1,9 @@
-// Update Dashboard statistics using real product data
+const API_URL = "http://localhost:3000/api/products";
+
+// Load dashboard statistics from the API.
 async function loadDashboard() {
     try {
-        const response = await fetch(
-            "http://localhost:3000/api/products"
-        );
+        const response = await fetch(API_URL);
 
         if (!response.ok) {
             throw new Error("Failed to load dashboard data");
@@ -25,6 +25,10 @@ async function loadDashboard() {
             0
         );
 
+        const lowStockCount = products.filter(
+            (product) => Number(product.quantity) <= Number(product.min_stock)
+        ).length;
+
         document.getElementById("total-products").textContent =
             totalProducts.toLocaleString("en-US");
 
@@ -36,56 +40,85 @@ async function loadDashboard() {
                 maximumFractionDigits: 2
             }) + " MAD";
 
+        document.getElementById("low-stock-count").textContent =
+            lowStockCount.toLocaleString("en-US");
+
     } catch (error) {
         console.error("Error loading dashboard:", error);
     }
 }
-// Load products from the backend API
+
+// Load products and display their stock status.
 async function loadProducts() {
     const tableBody = document.getElementById("products-table-body");
 
     try {
-        const response = await fetch("http://localhost:3000/api/products");
+        const response = await fetch(API_URL);
 
         if (!response.ok) {
             throw new Error("Failed to fetch products");
         }
 
         const result = await response.json();
+        const products = result.data;
 
-        // Clear the loading message
         tableBody.innerHTML = "";
 
-        // Display a message if there are no products
-        if (result.data.length === 0) {
+        if (products.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="5">No products found.</td>
+                    <td colspan="8">No products found.</td>
                 </tr>
             `;
             return;
         }
 
-        // Display each product in the table
-        result.data.forEach((product) => {
+        products.forEach((product) => {
             const row = document.createElement("tr");
+
+            const stockStatus = product.stock_status ||
+                (Number(product.quantity) <= Number(product.min_stock)
+                    ? "Low Stock"
+                    : "Normal");
+
+            const statusClass = stockStatus === "Low Stock"
+                ? "low-stock"
+                : "normal-stock";
 
             row.innerHTML = `
                 <td>${product.id}</td>
-                <td>${product.name}</td>
+                <td></td>
                 <td>${product.quantity}</td>
+                <td>${product.min_stock}</td>
                 <td>${Number(product.price).toLocaleString("en-US")} MAD</td>
-                <td>${product.created_at}</td>
                 <td>
-                    <button type="button" class="edit-button" data-id="${product.id}">
+                    <span class="stock-badge ${statusClass}">
+                        ${stockStatus}
+                    </span>
+                </td>
+                <td></td>
+                <td>
+                    <button
+                        type="button"
+                        class="edit-button"
+                        data-id="${product.id}"
+                    >
                         Edit
                     </button>
 
-                    <button type="button" class="delete-button" data-id="${product.id}">
+                    <button
+                        type="button"
+                        class="delete-button"
+                        data-id="${product.id}"
+                    >
                         Delete
                     </button>
                 </td>
             `;
+
+            // Use textContent for product data rather than inserting it as HTML.
+            row.cells[1].textContent = product.name;
+            row.cells[6].textContent = product.created_at || "";
 
             tableBody.appendChild(row);
         });
@@ -95,7 +128,7 @@ async function loadProducts() {
 
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5">
+                <td colspan="8">
                     Could not load products. Please check that the server is running.
                 </td>
             </tr>
@@ -103,11 +136,11 @@ async function loadProducts() {
     }
 }
 
-// Load products when the page opens
+// Load data when the page opens.
 loadProducts();
 loadDashboard();
 
-// Handle the Add Product form
+// Handle Add Product form submissions.
 const addProductForm = document.getElementById("add-product-form");
 const formMessage = document.getElementById("form-message");
 
@@ -115,35 +148,45 @@ addProductForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const name = document.getElementById("product-name").value.trim();
-    const quantity = Number(
-        document.getElementById("product-quantity").value
-    );
-    const price = Number(
-        document.getElementById("product-price").value
-    );
+    const quantityInput = document.getElementById("product-quantity").value;
+    const priceInput = document.getElementById("product-price").value;
+    const minStockInput = document.getElementById("product-min-stock").value;
 
-    if (!name || !Number.isInteger(quantity) || quantity < 0 ||
-        !Number.isFinite(price) || price < 0) {
-        formMessage.textContent = "Please enter valid product information.";
+    const quantity = Number(quantityInput);
+    const price = Number(priceInput);
+    const min_stock = Number(minStockInput);
+
+    if (
+        !name ||
+        quantityInput.trim() === "" ||
+        !Number.isInteger(quantity) ||
+        quantity < 0 ||
+        priceInput.trim() === "" ||
+        !Number.isFinite(price) ||
+        price < 0 ||
+        minStockInput.trim() === "" ||
+        !Number.isInteger(min_stock) ||
+        min_stock < 0
+    ) {
+        formMessage.textContent =
+            "Please enter valid product information.";
         formMessage.style.color = "#dc2626";
         return;
     }
 
     try {
-        const response = await fetch(
-            "http://localhost:3000/api/products",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    name: name,
-                    quantity: quantity,
-                    price: price
-                })
-            }
-        );
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                quantity,
+                price,
+                min_stock
+            })
+        });
 
         const result = await response.json();
 
@@ -158,6 +201,7 @@ addProductForm.addEventListener("submit", async (event) => {
         formMessage.style.color = "#16a34a";
 
         addProductForm.reset();
+        document.getElementById("product-min-stock").value = "5";
 
         await loadProducts();
         await loadDashboard();
@@ -171,7 +215,7 @@ addProductForm.addEventListener("submit", async (event) => {
     }
 });
 
-// Handle Edit button clicks
+// Handle Edit button clicks.
 document
     .getElementById("products-table-body")
     .addEventListener("click", async (event) => {
@@ -181,63 +225,68 @@ document
 
         const productId = button.dataset.id;
 
-        const response = await fetch(
-            `http://localhost:3000/api/products`
-        );
-
-        if (!response.ok) {
-            alert("Could not load products.");
-            return;
-        }
-
-        const result = await response.json();
-
-        const product = result.data.find(
-            (item) => String(item.id) === productId
-        );
-
-        if (!product) {
-            alert("Product not found.");
-            return;
-        }
-
-        const name = prompt("Enter the new product name:", product.name);
-
-        if (name === null) return;
-
-        const quantityInput = prompt(
-            "Enter the new quantity:",
-            product.quantity
-        );
-
-        if (quantityInput === null) return;
-
-        const priceInput = prompt(
-            "Enter the new price (MAD):",
-            product.price
-        );
-
-        if (priceInput === null) return;
-
-        const quantity = Number(quantityInput);
-        const price = Number(priceInput);
-
-        if (
-            !name.trim() ||
-            quantityInput.trim() === "" ||
-            !Number.isInteger(quantity) ||
-            quantity < 0 ||
-            priceInput.trim() === "" ||
-            !Number.isFinite(price) ||
-            price < 0
-        ) {
-            alert("Please enter valid product information.");
-            return;
-        }
-
         try {
+            const response = await fetch(API_URL);
+
+            if (!response.ok) {
+                alert("Could not load products.");
+                return;
+            }
+
+            const result = await response.json();
+
+            const product = result.data.find(
+                (item) => String(item.id) === productId
+            );
+
+            if (!product) {
+                alert("Product not found.");
+                return;
+            }
+
+            const name = prompt("Enter the new product name:", product.name);
+            if (name === null) return;
+
+            const quantityInput = prompt(
+                "Enter the new quantity:",
+                product.quantity
+            );
+            if (quantityInput === null) return;
+
+            const priceInput = prompt(
+                "Enter the new price (MAD):",
+                product.price
+            );
+            if (priceInput === null) return;
+
+            const minStockInput = prompt(
+                "Enter the minimum stock:",
+                product.min_stock
+            );
+            if (minStockInput === null) return;
+
+            const quantity = Number(quantityInput);
+            const price = Number(priceInput);
+            const min_stock = Number(minStockInput);
+
+            if (
+                !name.trim() ||
+                quantityInput.trim() === "" ||
+                !Number.isInteger(quantity) ||
+                quantity < 0 ||
+                priceInput.trim() === "" ||
+                !Number.isFinite(price) ||
+                price < 0 ||
+                minStockInput.trim() === "" ||
+                !Number.isInteger(min_stock) ||
+                min_stock < 0
+            ) {
+                alert("Please enter valid product information.");
+                return;
+            }
+
             const updateResponse = await fetch(
-                `http://localhost:3000/api/products/${productId}`,
+                `${API_URL}/${productId}`,
                 {
                     method: "PUT",
                     headers: {
@@ -246,7 +295,8 @@ document
                     body: JSON.stringify({
                         name: name.trim(),
                         quantity,
-                        price
+                        price,
+                        min_stock
                     })
                 }
             );
@@ -269,7 +319,7 @@ document
         }
     });
 
-// Handle Delete button clicks
+// Handle Delete button clicks.
 document
     .getElementById("products-table-body")
     .addEventListener("click", async (event) => {
@@ -287,7 +337,7 @@ document
 
         try {
             const response = await fetch(
-                `http://localhost:3000/api/products/${productId}`,
+                `${API_URL}/${productId}`,
                 {
                     method: "DELETE"
                 }
@@ -310,3 +360,4 @@ document
             alert("Could not connect to the server.");
         }
     });
+
