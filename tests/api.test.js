@@ -743,3 +743,44 @@ db.prepare("DELETE FROM products WHERE id = ?").run(
 
 
 });
+
+test("PUT /api/products preserves min_stock when it is omitted", async (t) => {
+    const db = require("./test-database");
+
+    const result = db.prepare(`
+        INSERT INTO products (name, quantity, price, min_stock)
+        VALUES (?, ?, ?, ?)
+    `).run("Preserve Stock Test", 12, 100, 8);
+
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => {
+        db.prepare("DELETE FROM products WHERE id = ?").run(
+            result.lastInsertRowid
+        );
+
+        return new Promise((resolve) => server.close(resolve));
+    });
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/products/${result.lastInsertRowid}`,
+        {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: "Preserve Stock Test",
+                quantity: 12,
+                price: 100
+            })
+        }
+    );
+
+    assert.equal(response.status, 200);
+
+    const body = await response.json();
+
+    assert.equal(body.data.min_stock, 8);
+    assert.equal(body.data.stock_status, "Normal");
+});
