@@ -5,8 +5,11 @@ const db = process.env.NODE_ENV === "test"
 // Get all products
 const getAllProducts = (req, res) => {
 try {
-const products = db.prepare("SELECT * FROM products").all();
-
+const products = db.prepare(`
+    SELECT *
+    FROM products
+    WHERE is_active = 1
+`).all();
 
     const productsWithStatus = products.map((product) => ({
         ...product,
@@ -177,9 +180,11 @@ const id = Number(req.params.id);
         });
     }
 
-    const result = db.prepare(
-        "DELETE FROM products WHERE id = ?"
-    ).run(id);
+    const result = db.prepare(`
+        UPDATE products
+        SET is_active = 0
+        WHERE id = ? AND is_active = 1
+    `).run(id);
 
     if (result.changes === 0) {
         return res.status(404).json({
@@ -190,7 +195,7 @@ const id = Number(req.params.id);
 
     res.json({
         status: "success",
-        message: "Product deleted successfully"
+        message: "Product archived successfully"
     });
 } catch (error) {
     console.error("Error deleting product:", error.message);

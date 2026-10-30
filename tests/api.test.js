@@ -289,53 +289,65 @@ test("PUT /api/products updates an existing product", async (t) => {
 });
 
 
-test("DELETE /api/products deletes an existing product", async (t) => {
-    const db = require("./test-database");
+test("DELETE /api/products archives an existing product", async (t) => {
+const db = require("./test-database");
 
-    // Add a product to the temporary database.
-    const insertResult = db.prepare(`
-        INSERT INTO products (name, quantity, price)
-        VALUES (?, ?, ?)
-    `).run("Product To Delete", 3, 50);
 
-    const productId = insertResult.lastInsertRowid;
+// Add a product to the temporary database.
+const insertResult = db.prepare(`
+    INSERT INTO products (name, quantity, price)
+    VALUES (?, ?, ?)
+`).run("Product To Archive", 3, 50);
 
-    const server = app.listen(0);
+const productId = insertResult.lastInsertRowid;
 
-    await new Promise((resolve) => server.once("listening", resolve));
+const server = app.listen(0);
 
-    t.after(() => new Promise((resolve, reject) => {
-        server.close((error) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    }));
+await new Promise((resolve) => server.once("listening", resolve));
 
-    const address = server.address();
-
-    const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/products/${productId}`,
-        {
-            method: "DELETE"
+t.after(() => new Promise((resolve, reject) => {
+    server.close((error) => {
+        if (error) {
+            reject(error);
+        } else {
+            resolve();
         }
-    );
+    });
+}));
 
-    assert.equal(response.status, 200);
+const address = server.address();
 
-    const body = await response.json();
+const response = await fetch(
+    `http://127.0.0.1:${address.port}/api/products/${productId}`,
+    {
+        method: "DELETE"
+    }
+);
 
-    assert.equal(body.status, "success");
+assert.equal(response.status, 200);
 
-    // Verify that the product was deleted from the database.
-    const deletedProduct = db.prepare(
-        "SELECT * FROM products WHERE id = ?"
-    ).get(productId);
+const body = await response.json();
 
-    assert.equal(deletedProduct, undefined);
+assert.equal(body.status, "success");
+
+// Verify that the product still exists but is archived.
+const archivedProduct = db.prepare(
+    "SELECT * FROM products WHERE id = ?"
+).get(productId);
+
+assert.ok(archivedProduct);
+assert.equal(archivedProduct.is_active, 0);
+
+// Verify that archived products are excluded from the active list.
+const activeProducts = db.prepare(
+    "SELECT * FROM products WHERE is_active = 1 AND id = ?"
+).all(productId);
+
+assert.equal(activeProducts.length, 0);
+
+
 });
+
 
 
 test("DELETE /api/products returns 404 for a nonexistent product", async (t) => {

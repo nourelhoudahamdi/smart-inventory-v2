@@ -1,4 +1,3 @@
-
 const Database = require("better-sqlite3");
 
 // Create an isolated in-memory database for automated tests.
@@ -16,7 +15,9 @@ db.exec(`
         price REAL NOT NULL DEFAULT 0,
         min_stock INTEGER NOT NULL DEFAULT 5
             CHECK (min_stock >= 0),
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        is_active INTEGER NOT NULL DEFAULT 1
+            CHECK (is_active IN (0, 1))
     );
 `);
 

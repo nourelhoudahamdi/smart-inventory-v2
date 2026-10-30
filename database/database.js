@@ -1,4 +1,3 @@
-
 const Database = require("better-sqlite3");
 const path = require("path");
 
@@ -9,6 +8,9 @@ const dbPath = process.env.DB_PATH
 
 // Open the database.
 const db = new Database(dbPath);
+
+// Enable foreign key constraints for this database connection.
+db.pragma("foreign_keys = ON");
 
 // Create the products table if it does not exist.
 db.exec(`
@@ -38,6 +40,23 @@ if (!hasMinStock) {
     console.log("Database migration successful: min_stock added.");
 } else {
     console.log("Database migration skipped: min_stock already exists.");
+}
+
+// Add is_active if the column is missing.
+const hasIsActive = columns.some(
+    (column) => column.name === "is_active"
+);
+
+if (!hasIsActive) {
+    db.exec(`
+        ALTER TABLE products
+        ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1
+        CHECK (is_active IN (0, 1));
+    `);
+
+    console.log("Database migration successful: is_active added.");
+} else {
+    console.log("Database migration skipped: is_active already exists.");
 }
 
 // Create the stock movements history table.
