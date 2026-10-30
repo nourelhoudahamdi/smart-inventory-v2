@@ -14,6 +14,8 @@ const totalQuantityElement = document.getElementById("total-quantity");
 const inventoryValueElement = document.getElementById("inventory-value");
 const lowStockCountElement = document.getElementById("low-stock-count");
 
+
+
 // Load dashboard statistics from the API.
 async function loadDashboard() {
     try {
@@ -64,6 +66,8 @@ async function loadDashboard() {
     }
 }
 
+
+
 // Load all products from the API.
 async function loadProducts() {
     const tableBody = document.getElementById("products-table-body");
@@ -92,6 +96,7 @@ async function loadProducts() {
         `;
     }
 }
+
 
 // Display products according to the search and stock filter.
 function renderProducts() {
@@ -149,12 +154,15 @@ function renderProducts() {
             <td>${product.quantity}</td>
             <td>${product.min_stock}</td>
             <td>${Number(product.price).toLocaleString("en-US")} MAD</td>
+
             <td>
                 <span class="stock-badge ${statusClass}">
                     ${stockStatus}
                 </span>
             </td>
+
             <td></td>
+
             <td>
                 <button
                     type="button"
@@ -171,6 +179,30 @@ function renderProducts() {
                 >
                     Delete
                 </button>
+
+                <button
+                    type="button"
+                    class="stock-in-button"
+                    data-id="${product.id}"
+                >
+                    Stock IN
+                </button>
+
+                <button
+                    type="button"
+                    class="stock-out-button"
+                    data-id="${product.id}"
+                >
+                    Stock OUT
+                </button>
+
+                <button
+                    type="button"
+                    class="history-button"
+                    data-id="${product.id}"
+                >
+                    History
+                </button>
             </td>
         `;
 
@@ -181,6 +213,8 @@ function renderProducts() {
         tableBody.appendChild(row);
     });
 }
+
+
 
 // Search products by name.
 searchInput.addEventListener("input", () => {
@@ -199,17 +233,9 @@ resetFiltersButton.addEventListener("click", () => {
     renderProducts();
 });
 
-// Load the products and dashboard when the page opens.
-async function initializeDashboard() {
-    await Promise.all([
-        loadProducts(),
-        loadDashboard()
-    ]);
-}
 
-initializeDashboard();
 
-// Handle Add Product form submissions.
+
 const addProductForm = document.getElementById("add-product-form");
 const formMessage = document.getElementById("form-message");
 
@@ -217,10 +243,13 @@ addProductForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const name = document.getElementById("product-name").value.trim();
+
     const quantityInput =
         document.getElementById("product-quantity").value;
+
     const priceInput =
         document.getElementById("product-price").value;
+
     const minStockInput =
         document.getElementById("product-min-stock").value;
 
@@ -242,6 +271,7 @@ addProductForm.addEventListener("submit", async (event) => {
     ) {
         formMessage.textContent =
             "Please enter valid product information.";
+
         formMessage.style.color = "#dc2626";
         return;
     }
@@ -265,6 +295,7 @@ addProductForm.addEventListener("submit", async (event) => {
         if (!response.ok) {
             formMessage.textContent =
                 result.message || "Could not add product.";
+
             formMessage.style.color = "#dc2626";
             return;
         }
@@ -273,6 +304,7 @@ addProductForm.addEventListener("submit", async (event) => {
         formMessage.style.color = "#16a34a";
 
         addProductForm.reset();
+
         document.getElementById("product-min-stock").value = "5";
 
         await Promise.all([
@@ -285,167 +317,315 @@ addProductForm.addEventListener("submit", async (event) => {
 
         formMessage.textContent =
             "Could not connect to the server. Check that it is running.";
+
         formMessage.style.color = "#dc2626";
     }
 });
 
-// Handle Edit button clicks.
+
+
+// One event listener handles all product action buttons.
 document
     .getElementById("products-table-body")
     .addEventListener("click", async (event) => {
-        const button = event.target.closest(".edit-button");
+
+        const button = event.target.closest(
+            ".edit-button, .delete-button, .stock-in-button, .stock-out-button, .history-button"
+        );
 
         if (!button) return;
 
         const productId = button.dataset.id;
 
-        try {
-            const response = await fetch(API_URL);
 
-            if (!response.ok) {
-                alert("Could not load products.");
-                return;
+        // ----------------------------------
+        // EDIT PRODUCT
+        // ----------------------------------
+
+        if (button.classList.contains("edit-button")) {
+
+            try {
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    alert("Could not load products.");
+                    return;
+                }
+
+                const result = await response.json();
+
+                const product = result.data.find(
+                    (item) => String(item.id) === productId
+                );
+
+                if (!product) {
+                    alert("Product not found.");
+                    return;
+                }
+
+                const name = prompt(
+                    "Enter the new product name:",
+                    product.name
+                );
+
+                if (name === null) return;
+
+                const quantityInput = prompt(
+                    "Enter the new quantity:",
+                    product.quantity
+                );
+
+                if (quantityInput === null) return;
+
+                const priceInput = prompt(
+                    "Enter the new price (MAD):",
+                    product.price
+                );
+
+                if (priceInput === null) return;
+
+                const minStockInput = prompt(
+                    "Enter the minimum stock:",
+                    product.min_stock
+                );
+
+                if (minStockInput === null) return;
+
+                const quantity = Number(quantityInput);
+                const price = Number(priceInput);
+                const min_stock = Number(minStockInput);
+
+                if (
+                    !name.trim() ||
+                    quantityInput.trim() === "" ||
+                    !Number.isInteger(quantity) ||
+                    quantity < 0 ||
+                    priceInput.trim() === "" ||
+                    !Number.isFinite(price) ||
+                    price < 0 ||
+                    minStockInput.trim() === "" ||
+                    !Number.isInteger(min_stock) ||
+                    min_stock < 0
+                ) {
+                    alert("Please enter valid product information.");
+                    return;
+                }
+
+                const updateResponse = await fetch(
+                    `${API_URL}/${productId}`,
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            name: name.trim(),
+                            quantity,
+                            price,
+                            min_stock
+                        })
+                    }
+                );
+
+                const updateResult = await updateResponse.json();
+
+                if (!updateResponse.ok) {
+                    alert(
+                        updateResult.message || "Could not update product."
+                    );
+                    return;
+                }
+
+                alert("Product updated successfully!");
+
+                await Promise.all([
+                    loadProducts(),
+                    loadDashboard()
+                ]);
+
+            } catch (error) {
+                console.error("Error updating product:", error);
+                alert("Could not connect to the server.");
             }
 
-            const result = await response.json();
+            return;
+        }
 
-            const product = result.data.find(
-                (item) => String(item.id) === productId
+
+        // ----------------------------------
+        // DELETE PRODUCT
+        // ----------------------------------
+
+        if (button.classList.contains("delete-button")) {
+
+            const confirmed = confirm(
+                "Are you sure you want to delete this product?"
             );
 
-            if (!product) {
-                alert("Product not found.");
-                return;
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(
+                    `${API_URL}/${productId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    alert(
+                        result.message || "Could not delete product."
+                    );
+                    return;
+                }
+
+                alert("Product deleted successfully!");
+
+                await Promise.all([
+                    loadProducts(),
+                    loadDashboard()
+                ]);
+
+            } catch (error) {
+                console.error("Error deleting product:", error);
+                alert("Could not connect to the server.");
             }
 
-            const name = prompt(
-                "Enter the new product name:",
-                product.name
-            );
+            return;
+        }
 
-            if (name === null) return;
 
-            const quantityInput = prompt(
-                "Enter the new quantity:",
-                product.quantity
-            );
+        // ----------------------------------
+        // STOCK IN / STOCK OUT
+        // ----------------------------------
+
+        if (
+            button.classList.contains("stock-in-button") ||
+            button.classList.contains("stock-out-button")
+        ) {
+
+            const movementType =
+                button.classList.contains("stock-in-button")
+                    ? "IN"
+                    : "OUT";
+
+            const quantityInput = prompt("Enter the quantity:");
 
             if (quantityInput === null) return;
 
-            const priceInput = prompt(
-                "Enter the new price (MAD):",
-                product.price
-            );
-
-            if (priceInput === null) return;
-
-            const minStockInput = prompt(
-                "Enter the minimum stock:",
-                product.min_stock
-            );
-
-            if (minStockInput === null) return;
-
             const quantity = Number(quantityInput);
-            const price = Number(priceInput);
-            const min_stock = Number(minStockInput);
 
             if (
-                !name.trim() ||
                 quantityInput.trim() === "" ||
                 !Number.isInteger(quantity) ||
-                quantity < 0 ||
-                priceInput.trim() === "" ||
-                !Number.isFinite(price) ||
-                price < 0 ||
-                minStockInput.trim() === "" ||
-                !Number.isInteger(min_stock) ||
-                min_stock < 0
+                quantity <= 0
             ) {
-                alert("Please enter valid product information.");
+                alert("Please enter a valid positive integer.");
                 return;
             }
 
-            const updateResponse = await fetch(
-                `${API_URL}/${productId}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        name: name.trim(),
-                        quantity,
-                        price,
-                        min_stock
-                    })
-                }
+            const reason = prompt(
+                "Enter the reason for this movement:"
             );
 
-            const updateResult = await updateResponse.json();
-
-            if (!updateResponse.ok) {
-                alert(
-                    updateResult.message || "Could not update product."
-                );
+            if (reason === null || !reason.trim()) {
+                alert("A reason is required.");
                 return;
             }
 
-            alert("Product updated successfully!");
+            try {
+                const response = await fetch(
+                    `${API_URL}/${productId}/movements`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            movement_type: movementType,
+                            quantity: quantity,
+                            reason: reason.trim()
+                        })
+                    }
+                );
 
-            await Promise.all([
-                loadProducts(),
-                loadDashboard()
-            ]);
+                const result = await response.json();
 
-        } catch (error) {
-            console.error("Error updating product:", error);
-            alert("Could not connect to the server.");
+                if (!response.ok) {
+                    alert(result.message || "Movement failed.");
+                    return;
+                }
+
+                alert(result.message);
+
+                await Promise.all([
+                    loadProducts(),
+                    loadDashboard()
+                ]);
+
+            } catch (error) {
+                console.error("Stock movement error:", error);
+                alert("Could not connect to the server.");
+            }
+
+            return;
+        }
+
+
+        // ----------------------------------
+        // MOVEMENT HISTORY
+        // ----------------------------------
+
+        if (button.classList.contains("history-button")) {
+
+            try {
+                const response = await fetch(
+                    `${API_URL}/${productId}/movements`
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    alert(
+                        result.message || "Could not retrieve history."
+                    );
+                    return;
+                }
+
+                if (result.data.length === 0) {
+                    alert("No stock movements found for this product.");
+                    return;
+                }
+
+                const history = result.data.map((movement) => {
+                    return (
+                        `${movement.movement_type}` +
+                        ` | Quantity: ${movement.quantity}` +
+                        ` | Reason: ${movement.reason}` +
+                        ` | Date: ${movement.created_at}`
+                    );
+                }).join("\n\n");
+
+                alert("STOCK MOVEMENT HISTORY\n\n" + history);
+
+            } catch (error) {
+                console.error("History error:", error);
+                alert("Could not connect to the server.");
+            }
+
+            return;
         }
     });
 
-// Handle Delete button clicks.
-document
-    .getElementById("products-table-body")
-    .addEventListener("click", async (event) => {
-        const button = event.target.closest(".delete-button");
 
-        if (!button) return;
+// Load the products and dashboard when the page opens.
+async function initializeDashboard() {
+    await Promise.all([
+        loadProducts(),
+        loadDashboard()
+    ]);
+}
 
-        const productId = button.dataset.id;
-
-        const confirmed = confirm(
-            "Are you sure you want to delete this product?"
-        );
-
-        if (!confirmed) return;
-
-        try {
-            const response = await fetch(
-                `${API_URL}/${productId}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                alert(
-                    result.message || "Could not delete product."
-                );
-                return;
-            }
-
-            alert("Product deleted successfully!");
-
-            await Promise.all([
-                loadProducts(),
-                loadDashboard()
-            ]);
-
-        } catch (error) {
-            console.error("Error deleting product:", error);
-            alert("Could not connect to the server.");
-        }
-    });
+initializeDashboard();

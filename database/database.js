@@ -1,3 +1,4 @@
+
 const Database = require("better-sqlite3");
 const path = require("path");
 
@@ -20,14 +21,13 @@ db.exec(`
     );
 `);
 
-// Check whether the min_stock column already exists.
+// Add min_stock if the column is missing.
 const columns = db.prepare("PRAGMA table_info(products)").all();
 
 const hasMinStock = columns.some(
     (column) => column.name === "min_stock"
 );
 
-// Add min_stock only if it is missing.
 if (!hasMinStock) {
     db.exec(`
         ALTER TABLE products
@@ -40,9 +40,25 @@ if (!hasMinStock) {
     console.log("Database migration skipped: min_stock already exists.");
 }
 
+// Create the stock movements history table.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS stock_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        movement_type TEXT NOT NULL
+            CHECK (movement_type IN ('IN', 'OUT')),
+        quantity INTEGER NOT NULL
+            CHECK (quantity > 0),
+        reason TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id)
+            REFERENCES products(id)
+            ON DELETE RESTRICT
+    );
+`);
+
 console.log("Database connected successfully!");
 console.log("Products table is ready!");
+console.log("Stock movements table is ready!");
 
 module.exports = db;
-
-

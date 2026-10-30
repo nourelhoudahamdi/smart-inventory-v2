@@ -784,3 +784,212 @@ test("PUT /api/products preserves min_stock when it is omitted", async (t) => {
     assert.equal(body.data.min_stock, 8);
     assert.equal(body.data.stock_status, "Normal");
 });
+
+
+
+test("POST /api/products/:id/movements records a stock IN movement", async (t) => {
+    const db = require("./test-database");
+
+    const product = db.prepare(`
+        INSERT INTO products (name, quantity, price, min_stock)
+        VALUES (?, ?, ?, ?)
+    `).run("Stock IN Test", 10, 100, 5);
+
+    const productId = Number(product.lastInsertRowid);
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(async () => {
+        db.prepare(
+            "DELETE FROM stock_movements WHERE product_id = ?"
+        ).run(productId);
+
+        db.prepare(
+            "DELETE FROM products WHERE id = ?"
+        ).run(productId);
+
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/products/${productId}/movements`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                movement_type: "IN",
+                quantity: 5,
+                reason: "Restock test"
+            })
+        }
+    );
+
+    assert.equal(response.status, 201);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+    assert.equal(body.data.previousQuantity, 10);
+    assert.equal(body.data.newQuantity, 15);
+
+    const updatedProduct = db.prepare(
+        "SELECT quantity FROM products WHERE id = ?"
+    ).get(productId);
+
+    assert.equal(updatedProduct.quantity, 15);
+
+    const movement = db.prepare(`
+        SELECT movement_type, quantity, reason
+        FROM stock_movements
+        WHERE product_id = ?
+    `).get(productId);
+
+    assert.equal(movement.movement_type, "IN");
+    assert.equal(movement.quantity, 5);
+    assert.equal(movement.reason, "Restock test");
+});
+
+
+
+test("POST /api/products/:id/movements records stock OUT and rejects insufficient stock", async (t) => {
+    const db = require("./test-database");
+
+    const product = db.prepare(`
+        INSERT INTO products (name, quantity, price, min_stock)
+        VALUES (?, ?, ?, ?)
+    `).run("Stock OUT Test", 10, 100, 5);
+
+    const productId = Number(product.lastInsertRowid);
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(async () => {
+        db.prepare(
+            "DELETE FROM stock_movements WHERE product_id = ?"
+        ).run(productId);
+
+        db.prepare(
+            "DELETE FROM products WHERE id = ?"
+        ).run(productId);
+
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    const url =
+        `http://127.0.0.1:${server.address().port}/api/products/${productId}/movements`;
+
+    // First, remove 4 units from the available stock of 10.
+    const outResponse = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            movement_type: "OUT",
+            quantity: 4,
+            reason: "Customer order test"
+        })
+    });
+
+    assert.equal(outResponse.status, 201);
+
+    const outBody = await outResponse.json();
+
+    assert.equal(outBody.data.previousQuantity, 10);
+    assert.equal(outBody.data.newQuantity, 6);
+
+    // Then, try to remove 7 units when only 6 remain.
+    const insufficientResponse = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            movement_type: "OUT",
+            quantity: 7,
+            reason: "Insufficient stock test"
+        })
+    });
+
+    assert.equal(insufficientResponse.status, 400);
+
+    // Confirm that the failed movement did not change the stock.
+    const updatedProduct = db.prepare(
+        "SELECT quantity FROM products WHERE id = ?"
+    ).get(productId);
+
+    assert.equal(updatedProduct.quantity, 6);
+
+    // Only the successful movement should be recorded.
+    const movements = db.prepare(`
+        SELECT movement_type, quantity
+        FROM stock_movements
+        WHERE product_id = ?
+    `).all(productId);
+
+    assert.equal(movements.length, 1);
+    assert.equal(movements[0].movement_type, "OUT");
+    assert.equal(movements[0].quantity, 4);
+});
+
+
+test("GET /api/products/:id/movements returns the movement history", async (t) => {
+    const db = require("./test-database");
+
+    const product = db.prepare(`
+        INSERT INTO products (name, quantity, price, min_stock)
+        VALUES (?, ?, ?, ?)
+    `).run("Movement History Test", 12, 100, 5);
+
+    const productId = Number(product.lastInsertRowid);
+
+    db.prepare(`
+        INSERT INTO stock_movements
+            (product_id, movement_type, quantity, reason)
+        VALUES (?, ?, ?, ?)
+    `).run(productId, "IN", 5, "Initial restock");
+
+    db.prepare(`
+        INSERT INTO stock_movements
+            (product_id, movement_type, quantity, reason)
+        VALUES (?, ?, ?, ?)
+    `).run(productId, "OUT", 3, "Customer order");
+
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(async () => {
+        db.prepare(
+            "DELETE FROM stock_movements WHERE product_id = ?"
+        ).run(productId);
+
+        db.prepare(
+            "DELETE FROM products WHERE id = ?"
+        ).run(productId);
+
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/products/${productId}/movements`
+    );
+
+    assert.equal(response.status, 200);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+    assert.equal(body.count, 2);
+    assert.equal(body.data.length, 2);
+
+    // History should be returned newest first.
+    assert.equal(body.data[0].movement_type, "OUT");
+    assert.equal(body.data[0].quantity, 3);
+    assert.equal(body.data[0].reason, "Customer order");
+
+    assert.equal(body.data[1].movement_type, "IN");
+    assert.equal(body.data[1].quantity, 5);
+    assert.equal(body.data[1].reason, "Initial restock");
+
+    assert.ok(body.data[0].created_at);
+    assert.ok(body.data[1].created_at);
+});

@@ -1,5 +1,7 @@
+
 const express = require("express");
 const productController = require("../controllers/productController");
+const stockMovementController = require("../controllers/stockMovementController");
 
 const router = express.Router();
 
@@ -10,6 +12,17 @@ const db = process.env.NODE_ENV === "test"
 
 // GET all products
 router.get("/", productController.getAllProducts);
+
+// Stock movement routes
+router.post(
+    "/:id/movements",
+    stockMovementController.createMovement
+);
+
+router.get(
+    "/:id/movements",
+    stockMovementController.getProductMovements
+);
 
 // POST a new product
 router.post("/", productController.createProduct);
