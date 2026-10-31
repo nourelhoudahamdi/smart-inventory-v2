@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +17,7 @@
     </header>
 
     <main>
+        <!-- Dashboard -->
         <section>
             <h2>Dashboard</h2>
             <p>Welcome to your inventory management system.</p>
@@ -43,6 +45,7 @@
             </div>
         </section>
 
+        <!-- Add Product -->
         <section>
             <h2>Add New Product</h2>
 
@@ -93,15 +96,22 @@
                     >
                 </div>
 
+                <div>
+                    <label for="product-supplier">Supplier</label>
+                    <select id="product-supplier">
+                        <option value="">No Supplier</option>
+                    </select>
+                </div>
+
                 <button type="submit">Add Product</button>
             </form>
 
             <p id="form-message"></p>
         </section>
 
+        <!-- Products -->
         <section>
             <h2>Products</h2>
-
 
             <div class="products-controls">
                 <div>
@@ -114,7 +124,9 @@
                 </div>
 
                 <div>
-                    <label for="filter-stock-status">Filter by Stock Status</label>
+                    <label for="filter-stock-status">
+                        Filter by Stock Status
+                    </label>
                     <select id="filter-stock-status">
                         <option value="all">All Products</option>
                         <option value="Normal">Normal</option>
@@ -122,10 +134,10 @@
                     </select>
                 </div>
 
-                <button type="button" id="reset-filters">Reset Filters</button>
-                </div>
-
-
+                <button type="button" id="reset-filters">
+                    Reset Filters
+                </button>
+            </div>
 
             <div class="table-container">
                 <table id="products-table">
@@ -136,6 +148,7 @@
                             <th>Quantity</th>
                             <th>Minimum Stock</th>
                             <th>Price (MAD)</th>
+                            <th>Supplier</th>
                             <th>Stock Status</th>
                             <th>Created At</th>
                             <th>Actions</th>
@@ -144,7 +157,88 @@
 
                     <tbody id="products-table-body">
                         <tr>
-                            <td colspan="8">Loading products...</td>
+                            <td colspan="9">Loading products...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Supplier Management -->
+        <section id="suppliers-section">
+            <h2>Supplier Management</h2>
+            <p>Manage your suppliers and their contact information.</p>
+
+            <h3 id="supplier-form-title">Add New Supplier</h3>
+
+            <form id="supplier-form">
+                <div>
+                    <label for="supplier-name">Supplier Name</label>
+                    <input
+                        type="text"
+                        id="supplier-name"
+                        placeholder="Enter supplier name"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="supplier-phone">Phone</label>
+                    <input
+                        type="tel"
+                        id="supplier-phone"
+                        placeholder="Enter phone number"
+                    >
+                </div>
+
+                <div>
+                    <label for="supplier-email">Email</label>
+                    <input
+                        type="email"
+                        id="supplier-email"
+                        placeholder="Enter email address"
+                    >
+                </div>
+
+                <div>
+                    <label for="supplier-address">Address</label>
+                    <input
+                        type="text"
+                        id="supplier-address"
+                        placeholder="Enter supplier address"
+                    >
+                </div>
+
+                <button type="submit" id="supplier-submit-button">
+                    Add Supplier
+                </button>
+
+                <button type="button" id="cancel-supplier-edit" hidden>
+                    Cancel Edit
+                </button>
+            </form>
+
+            <p id="supplier-message"></p>
+
+            <h3>Suppliers List</h3>
+
+            <div class="table-container">
+                <table id="suppliers-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Supplier Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Products Count</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="suppliers-table-body">
+                        <tr>
+                            <td colspan="7">Loading suppliers...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -155,4 +249,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
