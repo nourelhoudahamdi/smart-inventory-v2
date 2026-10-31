@@ -227,34 +227,68 @@ color: #166534;
 }
 
 /* =========================
-9. Edit and Delete Buttons
+9. Product Action Buttons
 ========================= */
+
 .edit-button,
-.delete-button {
-padding: 7px 10px;
-margin: 2px;
-border: none;
-border-radius: 6px;
-color: white;
-font-size: 12px;
-font-weight: bold;
-cursor: pointer;
+.delete-button,
+.stock-in-button,
+.stock-out-button,
+.history-button {
+    padding: 8px 12px;
+    margin: 3px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
+/* Edit */
 .edit-button {
-background-color: #2563eb;
+    background-color: #2563eb;
 }
 
 .edit-button:hover {
-background-color: #1d4ed8;
+    background-color: #1d4ed8;
 }
 
+/* Archive */
 .delete-button {
-background-color: #dc2626;
+    background-color: #dc2626;
 }
 
 .delete-button:hover {
-background-color: #b91c1c;
+    background-color: #b91c1c;
+}
+
+/* Stock IN */
+.stock-in-button {
+    background-color: #16a34a;
+}
+
+.stock-in-button:hover {
+    background-color: #15803d;
+}
+
+/* Stock OUT */
+.stock-out-button {
+    background-color: #ea580c;
+}
+
+.stock-out-button:hover {
+    background-color: #c2410c;
+}
+
+/* History */
+.history-button {
+    background-color: #64748b;
+}
+
+.history-button:hover {
+    background-color: #475569;
 }
 
 /* =========================
