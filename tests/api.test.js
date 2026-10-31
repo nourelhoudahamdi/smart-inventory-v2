@@ -1005,3 +1005,156 @@ test("GET /api/products/:id/movements returns the movement history", async (t) =
     assert.ok(body.data[0].created_at);
     assert.ok(body.data[1].created_at);
 });
+
+// ================================
+// Supplier API Tests
+// ================================
+
+test("POST /api/suppliers creates a new supplier", async (t) => {
+    const db = require("./test-database");
+
+    db.prepare("DELETE FROM suppliers").run();
+
+    const server = app.listen(0);
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) reject(error);
+            else resolve();
+        });
+    }));
+
+    const address = server.address();
+
+    const response = await fetch(
+        `http://127.0.0.1:${address.port}/api/suppliers`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: "Test Supplier",
+                phone: "0611111111",
+                email: "test@example.com",
+                address: "Tangier"
+            })
+        }
+    );
+
+    assert.equal(response.status, 201);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+    assert.equal(body.data.name, "Test Supplier");
+    assert.equal(body.data.phone, "0611111111");
+});
+
+test("POST /api/suppliers rejects an empty supplier name", async (t) => {
+    const server = app.listen(0);
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) reject(error);
+            else resolve();
+        });
+    }));
+
+    const address = server.address();
+
+    const response = await fetch(
+        `http://127.0.0.1:${address.port}/api/suppliers`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: "" })
+        }
+    );
+
+    assert.equal(response.status, 400);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "error");
+    assert.equal(body.message, "Supplier name is required.");
+});
+
+test("PUT /api/suppliers updates an existing supplier", async (t) => {
+    const db = require("./test-database");
+
+    db.prepare("DELETE FROM suppliers").run();
+
+    const result = db.prepare(`
+        INSERT INTO suppliers (name)
+        VALUES (?)
+    `).run("Old Supplier");
+
+    const server = app.listen(0);
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) reject(error);
+            else resolve();
+        });
+    }));
+
+    const address = server.address();
+
+    const response = await fetch(
+        `http://127.0.0.1:${address.port}/api/suppliers/${result.lastInsertRowid}`,
+        {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: "Updated Supplier" })
+        }
+    );
+
+    assert.equal(response.status, 200);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+    assert.equal(body.data.name, "Updated Supplier");
+});
+
+test("DELETE /api/suppliers archives an existing supplier", async (t) => {
+    const db = require("./test-database");
+
+    db.prepare("DELETE FROM suppliers").run();
+
+    const result = db.prepare(`
+        INSERT INTO suppliers (name)
+        VALUES (?)
+    `).run("Supplier To Archive");
+
+    const server = app.listen(0);
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) reject(error);
+            else resolve();
+        });
+    }));
+
+    const address = server.address();
+
+    const response = await fetch(
+        `http://127.0.0.1:${address.port}/api/suppliers/${result.lastInsertRowid}`,
+        { method: "DELETE" }
+    );
+
+    assert.equal(response.status, 200);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+
+    const supplier = db.prepare(`
+        SELECT is_active FROM suppliers WHERE id = ?
+    `).get(result.lastInsertRowid);
+
+    assert.equal(supplier.is_active, 0);
+});
