@@ -177,7 +177,7 @@ function renderProducts() {
                     class="delete-button"
                     data-id="${product.id}"
                 >
-                    Delete
+                    Archive
                 </button>
 
                 <button
@@ -459,7 +459,7 @@ document
         if (button.classList.contains("delete-button")) {
 
             const confirmed = confirm(
-                "Are you sure you want to delete this product?"
+                "Are you sure you want to archive this product?"
             );
 
             if (!confirmed) return;
@@ -476,12 +476,12 @@ document
 
                 if (!response.ok) {
                     alert(
-                        result.message || "Could not delete product."
+                        result.message || "Could not archive product."
                     );
                     return;
                 }
 
-                alert("Product deleted successfully!");
+                alert("Product archived successfully!");
 
                 await Promise.all([
                     loadProducts(),
@@ -489,7 +489,7 @@ document
                 ]);
 
             } catch (error) {
-                console.error("Error deleting product:", error);
+                console.error("Error archiving product:", error);
                 alert("Could not connect to the server.");
             }
 
