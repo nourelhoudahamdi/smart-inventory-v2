@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const productRoutes = require("./routes/productRoutes");
+const supplierRoutes = require("./routes/supplierRoutes");
 
 const app = express();
 const PORT = 3000;
@@ -24,6 +25,7 @@ message: "API is working correctly"
 
 // Product routes
 app.use("/api/products", productRoutes);
+app.use("/api/suppliers", supplierRoutes);
 
 // Start the server only when this file is run directly
 if (require.main === module) {

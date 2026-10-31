@@ -6,6 +6,20 @@ const db = new Database(":memory:");
 // Enable foreign key enforcement.
 db.pragma("foreign_keys = ON");
 
+// Create the suppliers table.
+db.exec(`
+    CREATE TABLE suppliers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT,
+        email TEXT,
+        address TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        is_active INTEGER NOT NULL DEFAULT 1
+            CHECK (is_active IN (0, 1))
+    );
+`);
+
 // Create the products table.
 db.exec(`
     CREATE TABLE products (
@@ -17,7 +31,11 @@ db.exec(`
             CHECK (min_stock >= 0),
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         is_active INTEGER NOT NULL DEFAULT 1
-            CHECK (is_active IN (0, 1))
+            CHECK (is_active IN (0, 1)),
+        supplier_id INTEGER,
+        FOREIGN KEY (supplier_id)
+            REFERENCES suppliers(id)
+            ON DELETE SET NULL
     );
 `);
 

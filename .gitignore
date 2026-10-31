@@ -6,6 +6,10 @@ database/inventory.db
 database/inventory.db-shm
 database/inventory.db-wal
 database/*.backup.db
+database/*.before-suppliers.db
+
+# Local frontend backups
+frontend/*.before-suppliers.*
 
 # Environment variables and secrets
 .env

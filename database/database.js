@@ -76,7 +76,42 @@ db.exec(`
     );
 `);
 
-console.log("Database connected successfully!");
+// Create the suppliers table.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS suppliers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT,
+        email TEXT,
+        address TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        is_active INTEGER NOT NULL DEFAULT 1
+            CHECK (is_active IN (0, 1))
+    );
+`);
+
+// Add supplier_id to products if the column is missing.
+const productColumns = db.prepare(
+    "PRAGMA table_info(products)"
+).all();
+
+const hasSupplierId = productColumns.some(
+    (column) => column.name === "supplier_id"
+);
+
+if (!hasSupplierId) {
+    db.exec(`
+        ALTER TABLE products
+        ADD COLUMN supplier_id INTEGER
+        REFERENCES suppliers(id)
+        ON DELETE SET NULL;
+    `);
+
+    console.log("Database migration successful: supplier_id added.");
+} else {
+    console.log("Database migration skipped: supplier_id already exists.");
+}
+
 console.log("Products table is ready!");
 console.log("Stock movements table is ready!");
 
