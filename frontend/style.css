@@ -506,3 +506,39 @@ section h2 {
         gap: 15px;
     }
 }
+
+/* =========================
+   14. Smart Reorder Suggestions
+========================= */
+
+#reorder-suggestions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.reorder-card {
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-left: 5px solid #ea580c;
+    border-radius: 10px;
+    padding: 18px;
+}
+
+.reorder-card h3 {
+    color: #9a3412;
+    font-size: 17px;
+    margin-bottom: 10px;
+}
+
+.reorder-card p {
+    color: #475569;
+    font-size: 14px;
+    margin: 8px 0;
+}
+
+.reorder-card p:last-child {
+    color: #c2410c;
+    font-weight: bold;
+}

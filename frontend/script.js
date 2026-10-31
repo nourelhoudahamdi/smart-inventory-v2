@@ -436,6 +436,7 @@ async function loadProducts() {
 
         allProducts = result.data;
         renderProducts();
+        renderReorderSuggestions();
 
     } catch (error) {
         console.error("Error loading products:", error);
@@ -563,6 +564,53 @@ function renderProducts() {
     });
 }
 
+// ------------------------------
+// SMART REORDER SUGGESTIONS
+// ------------------------------
+
+function renderReorderSuggestions() {
+    const container = document.getElementById("reorder-suggestions");
+
+    const productsToReorder = allProducts.filter(product => {
+        return Number(product.quantity) <= Number(product.min_stock);
+    });
+
+    container.textContent = "";
+
+    if (productsToReorder.length === 0) {
+        container.textContent = "No products need restocking.";
+        return;
+    }
+
+    productsToReorder.forEach(product => {
+        const suggestedQuantity = Math.max(
+            Number(product.min_stock) - Number(product.quantity),
+            0
+        );
+
+        const card = document.createElement("div");
+        card.className = "reorder-card";
+
+        const name = document.createElement("h3");
+        name.textContent = product.name;
+
+        const details = document.createElement("p");
+        details.textContent =
+            `Current Quantity: ${product.quantity} | Minimum Stock: ${product.min_stock}`;
+
+        const suggestion = document.createElement("p");
+        suggestion.textContent =
+            suggestedQuantity === 0
+                ? "At minimum stock — monitor this product."
+                : `Suggested Reorder: ${suggestedQuantity} units`;
+
+        card.appendChild(name);
+        card.appendChild(details);
+        card.appendChild(suggestion);
+
+        container.appendChild(card);
+    });
+}
 
 // ------------------------------
 // PRODUCTS: SEARCH / FILTER

@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const productRoutes = require("./routes/productRoutes");
 const supplierRoutes = require("./routes/supplierRoutes");
 
@@ -10,9 +11,12 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve frontend files
+app.use(express.static(path.join(__dirname, "../frontend")));
+
 // Home route
 app.get("/", (req, res) => {
-res.send("Smart Inventory & Supply Tracker - Server is running!");
+    res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
 // Health check route
