@@ -99,7 +99,63 @@ const getMovementTrends = (req, res) => {
     }
 };
 
+// Get the top 5 most active products
+const getTopActiveProducts = (req, res) => {
+    try {
+        const products = db.prepare(`
+            SELECT
+                products.id,
+                products.name,
+
+                SUM(
+                    CASE
+                        WHEN stock_movements.movement_type = 'IN'
+                        THEN stock_movements.quantity ELSE 0
+                    END
+                ) AS total_in,
+
+                SUM(
+                    CASE
+                        WHEN stock_movements.movement_type = 'OUT'
+                        THEN stock_movements.quantity ELSE 0
+                    END
+                ) AS total_out,
+
+                SUM(stock_movements.quantity) AS total_units_moved,
+
+                COUNT(stock_movements.id) AS total_movements
+
+            FROM products
+
+            INNER JOIN stock_movements
+                ON products.id = stock_movements.product_id
+
+            WHERE products.is_active = 1
+
+            GROUP BY products.id, products.name
+
+            ORDER BY total_units_moved DESC, total_movements DESC
+
+            LIMIT 5
+        `).all();
+
+        res.json({
+            status: "success",
+            data: products
+        });
+
+    } catch (error) {
+        console.error("Error fetching top active products:", error.message);
+
+        res.status(500).json({
+            status: "error",
+            message: "Failed to fetch top active products."
+        });
+    }
+};
+
 module.exports = {
     getMovementSummary,
-    getMovementTrends
+    getMovementTrends,
+    getTopActiveProducts
 };

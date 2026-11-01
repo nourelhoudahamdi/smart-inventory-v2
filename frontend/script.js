@@ -3,6 +3,8 @@ const SUPPLIERS_API_URL = "http://localhost:3000/api/suppliers";
 const ANALYTICS_API_URL = "http://localhost:3000/api/analytics/stock-movements";
 const MOVEMENT_TRENDS_API_URL =
     "http://localhost:3000/api/analytics/stock-movement-trends";
+const TOP_PRODUCTS_API_URL =
+    "http://localhost:3000/api/analytics/top-active-products";
 
 let allProducts = [];
 let allSuppliers = [];
@@ -1159,6 +1161,59 @@ async function loadMovementTrends() {
     }
 }
 
+// Load top 5 most active products
+async function loadTopActiveProducts() {
+    const tableBody = document.getElementById("top-products-body");
+
+    try {
+        const response = await fetch(TOP_PRODUCTS_API_URL);
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch top active products");
+        }
+
+        const result = await response.json();
+
+        if (result.status !== "success") {
+            throw new Error("Failed to load top active products");
+        }
+
+        tableBody.innerHTML = "";
+
+        if (result.data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5">No stock movements recorded yet.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        result.data.forEach(product => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${product.name}</td>
+                <td>${product.total_in}</td>
+                <td>${product.total_out}</td>
+                <td>${product.total_units_moved}</td>
+                <td>${product.total_movements}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Error loading top active products:", error);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5">Unable to load top active products.</td>
+            </tr>
+        `;
+    }
+}
+
 // ------------------------------
 // INITIALIZE APPLICATION
 // ------------------------------
@@ -1169,7 +1224,8 @@ async function initializeDashboard() {
         loadProducts(),
         loadDashboard(),
         loadMovementAnalytics(),
-        loadMovementTrends()
+        loadMovementTrends(),
+        loadTopActiveProducts()
     ]);
 }
 

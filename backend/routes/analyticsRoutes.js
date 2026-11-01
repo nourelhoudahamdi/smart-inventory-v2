@@ -15,4 +15,10 @@ router.get(
     analyticsController.getMovementTrends
 );
 
+// GET top 5 most active products
+router.get(
+    "/top-active-products",
+    analyticsController.getTopActiveProducts
+);
+
 module.exports = router;
