@@ -1158,3 +1158,71 @@ test("DELETE /api/suppliers archives an existing supplier", async (t) => {
 
     assert.equal(supplier.is_active, 0);
 });
+
+test("GET /api/analytics/stock-movements returns correct summary and details", async (t) => {
+    const db = require("./test-database");
+
+    // Prepare test data
+    db.prepare("DELETE FROM stock_movements").run();
+    db.prepare("DELETE FROM products").run();
+
+    const product = db.prepare(`
+        INSERT INTO products (name, quantity, price)
+        VALUES (?, ?, ?)
+    `).run("Analytics Test Product", 10, 100);
+
+    const productId = product.lastInsertRowid;
+
+    const insertMovement = db.prepare(`
+        INSERT INTO stock_movements
+        (product_id, movement_type, quantity, reason)
+        VALUES (?, ?, ?, ?)
+    `);
+
+    insertMovement.run(productId, "IN", 5, "Test delivery");
+    insertMovement.run(productId, "IN", 3, "Test delivery");
+    insertMovement.run(productId, "OUT", 4, "Test usage");
+
+    // Start test server
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) reject(error);
+            else resolve();
+        });
+    }));
+
+    const address = server.address();
+
+    const response = await fetch(
+        `http://127.0.0.1:${address.port}/api/analytics/stock-movements`
+    );
+
+    assert.equal(response.status, 200);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+
+    assert.deepEqual(body.summary, {
+        total_in: 8,
+        total_out: 4,
+        net_movement: 4
+    });
+
+    assert.deepEqual(body.data, [
+        {
+            movement_type: "IN",
+            total_movements: 2,
+            total_quantity: 8
+        },
+        {
+            movement_type: "OUT",
+            total_movements: 1,
+            total_quantity: 4
+        }
+    ]);
+});

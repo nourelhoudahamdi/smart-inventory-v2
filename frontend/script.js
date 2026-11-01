@@ -1,10 +1,11 @@
-
 const API_URL = "http://localhost:3000/api/products";
 const SUPPLIERS_API_URL = "http://localhost:3000/api/suppliers";
+const ANALYTICS_API_URL = "http://localhost:3000/api/analytics/stock-movements";
 
 let allProducts = [];
 let allSuppliers = [];
 let editingSupplierId = null;
+let movementChart = null;
 
 // ------------------------------
 // DOM ELEMENTS
@@ -988,6 +989,99 @@ productsTableBody.addEventListener("click", async event => {
     }
 });
 
+// ------------------------------
+// STOCK MOVEMENT ANALYTICS
+// ------------------------------
+
+async function loadMovementAnalytics() {
+    const totalStockInElement =
+        document.getElementById("total-stock-in");
+
+    const totalStockOutElement =
+        document.getElementById("total-stock-out");
+
+    const netMovementElement =
+        document.getElementById("net-movement");
+
+    try {
+        const response = await fetch(ANALYTICS_API_URL);
+
+        if (!response.ok) {
+            throw new Error("Failed to load stock movement analytics");
+        }
+
+        const result = await response.json();
+
+        const summary = result.summary;
+
+        totalStockInElement.textContent =
+            summary.total_in.toLocaleString("en-US");
+
+        totalStockOutElement.textContent =
+            summary.total_out.toLocaleString("en-US");
+
+        const netMovement = summary.net_movement;
+
+        netMovementElement.textContent =
+            `${netMovement > 0 ? "+" : ""}${netMovement.toLocaleString("en-US")}`;
+            const chartCanvas = document.getElementById("stock-movement-chart");
+
+const stockIn = result.data.find(
+    item => item.movement_type === "IN"
+)?.total_quantity || 0;
+
+const stockOut = result.data.find(
+    item => item.movement_type === "OUT"
+)?.total_quantity || 0;
+
+// Remove the previous chart before creating a new one
+if (movementChart) {
+    movementChart.destroy();
+}
+
+movementChart = new Chart(chartCanvas, {
+    type: "bar",
+
+    data: {
+        labels: ["Stock IN", "Stock OUT"],
+
+        datasets: [{
+            label: "Quantity",
+            data: [stockIn, stockOut],
+            backgroundColor: ["#22c55e", "#ef4444"],
+            borderRadius: 8
+        }]
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+
+    } catch (error) {
+        console.error("Analytics error:", error);
+
+        totalStockInElement.textContent = "Unavailable";
+        totalStockOutElement.textContent = "Unavailable";
+        netMovementElement.textContent = "Unavailable";
+    }
+}
 
 // ------------------------------
 // INITIALIZE APPLICATION
@@ -997,7 +1091,8 @@ async function initializeDashboard() {
     await Promise.all([
         loadSuppliers(),
         loadProducts(),
-        loadDashboard()
+        loadDashboard(),
+        loadMovementAnalytics()
     ]);
 }
 

@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,18 +11,23 @@
 
 <body>
 
+    <!-- ================= HEADER ================= -->
     <header>
         <h1>Smart Inventory</h1>
         <p>Inventory & Supply Tracker</p>
     </header>
 
+
     <main>
-        <!-- Dashboard -->
-        <section>
+
+        <!-- ================= 1. DASHBOARD ================= -->
+        <section id="dashboard-section">
+
             <h2>Dashboard</h2>
             <p>Welcome to your inventory management system.</p>
 
             <div class="stats-container">
+
                 <div class="stat-card">
                     <h3>Total Products</h3>
                     <p id="total-products">0</p>
@@ -42,24 +47,65 @@
                     <h3>Low Stock Products</h3>
                     <p id="low-stock-count">0</p>
                 </div>
+
             </div>
+
         </section>
 
-                <!-- Smart Reorder Suggestions -->
+
+        <!-- ================= 2. STOCK MOVEMENT ANALYTICS ================= -->
+        <section id="analytics-section">
+
+            <h2>Stock Movement Analytics</h2>
+            <p>Overview of stock movements.</p>
+
+            <div class="stats-container">
+
+                <div class="stat-card">
+                    <h3>Total Stock IN</h3>
+                    <p id="total-stock-in">Loading...</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Total Stock OUT</h3>
+                    <p id="total-stock-out">Loading...</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Net Movement</h3>
+                    <p id="net-movement">Loading...</p>
+                </div>
+
+            </div>
+
+            <div class="chart-container">
+                <h3>Stock Movement Overview</h3>
+                <canvas id="stock-movement-chart"></canvas>
+            </div>
+
+        </section>
+
+
+        <!-- ================= 3. SMART REORDER SUGGESTIONS ================= -->
         <section id="reorder-section">
+
             <h2>Smart Reorder Suggestions</h2>
             <p>Products that need restocking.</p>
 
             <div id="reorder-suggestions">
                 <p>Loading reorder suggestions...</p>
             </div>
+
         </section>
 
-        <!-- Add Product -->
-        <section>
+
+        <!-- ================= 4. ADD NEW PRODUCT ================= -->
+        <section id="add-product-section">
+
             <h2>Add New Product</h2>
 
             <form id="add-product-form">
+
                 <div>
                     <label for="product-name">Product Name</label>
                     <input
@@ -114,16 +160,22 @@
                 </div>
 
                 <button type="submit">Add Product</button>
+
             </form>
 
             <p id="form-message"></p>
+
         </section>
 
-        <!-- Products -->
-        <section>
+
+        <!-- ================= 5. PRODUCTS ================= -->
+        <section id="products-section">
+
             <h2>Products</h2>
 
+            <!-- Search and Filters -->
             <div class="products-controls">
+
                 <div>
                     <label for="search-product">Search Product</label>
                     <input
@@ -137,6 +189,7 @@
                     <label for="filter-stock-status">
                         Filter by Stock Status
                     </label>
+
                     <select id="filter-stock-status">
                         <option value="all">All Products</option>
                         <option value="Normal">Normal</option>
@@ -147,10 +200,15 @@
                 <button type="button" id="reset-filters">
                     Reset Filters
                 </button>
+
             </div>
 
+
+            <!-- Products Table -->
             <div class="table-container">
+
                 <table id="products-table">
+
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -170,18 +228,26 @@
                             <td colspan="9">Loading products...</td>
                         </tr>
                     </tbody>
+
                 </table>
+
             </div>
+
         </section>
 
-        <!-- Supplier Management -->
+
+        <!-- ================= 6. SUPPLIER MANAGEMENT ================= -->
         <section id="suppliers-section">
+
             <h2>Supplier Management</h2>
             <p>Manage your suppliers and their contact information.</p>
 
+
+            <!-- Supplier Form -->
             <h3 id="supplier-form-title">Add New Supplier</h3>
 
             <form id="supplier-form">
+
                 <div>
                     <label for="supplier-name">Supplier Name</label>
                     <input
@@ -226,14 +292,19 @@
                 <button type="button" id="cancel-supplier-edit" hidden>
                     Cancel Edit
                 </button>
+
             </form>
 
             <p id="supplier-message"></p>
 
+
+            <!-- Suppliers Table -->
             <h3>Suppliers List</h3>
 
             <div class="table-container">
+
                 <table id="suppliers-table">
+
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -251,11 +322,19 @@
                             <td colspan="7">Loading suppliers...</td>
                         </tr>
                     </tbody>
+
                 </table>
+
             </div>
+
         </section>
+
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ================= JAVASCRIPT ================= -->
     <script src="script.js"></script>
+
 </body>
 </html>
