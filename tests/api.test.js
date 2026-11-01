@@ -1226,3 +1226,102 @@ test("GET /api/analytics/stock-movements returns correct summary and details", a
         }
     ]);
 });
+
+test("GET /api/analytics/top-active-products returns the top 5 active products", async (t) => {
+    const db = require("./test-database");
+
+    // Clean the isolated test database.
+    db.prepare("DELETE FROM stock_movements").run();
+    db.prepare("DELETE FROM products").run();
+
+    // Create 6 active products and 1 archived product.
+    const products = [
+        ["Product A", 10, 100, 1],
+        ["Product B", 10, 100, 1],
+        ["Product C", 10, 100, 1],
+        ["Product D", 10, 100, 1],
+        ["Product E", 10, 100, 1],
+        ["Product F", 10, 100, 1],
+        ["Archived Product", 10, 100, 0]
+    ];
+
+    const insertProduct = db.prepare(`
+        INSERT INTO products (name, quantity, price, is_active)
+        VALUES (?, ?, ?, ?)
+    `);
+
+    const productIds = products.map((product) =>
+        Number(insertProduct.run(...product).lastInsertRowid)
+    );
+
+    const insertMovement = db.prepare(`
+        INSERT INTO stock_movements
+            (product_id, movement_type, quantity, reason)
+        VALUES (?, ?, ?, ?)
+    `);
+
+    // Give each active product a different movement total.
+    const movementData = [
+        [0, "IN", 10],
+        [0, "OUT", 5],
+        [1, "IN", 8],
+        [1, "OUT", 2],
+        [2, "IN", 6],
+        [3, "IN", 5],
+        [4, "OUT", 4],
+        [5, "IN", 1],
+        [6, "IN", 100]
+    ];
+
+    for (const [index, type, quantity] of movementData) {
+        insertMovement.run(
+            productIds[index],
+            type,
+            quantity,
+            "Analytics test"
+        );
+    }
+
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(async () => {
+        db.prepare("DELETE FROM stock_movements").run();
+        db.prepare("DELETE FROM products").run();
+
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/analytics/top-active-products`
+    );
+
+    assert.equal(response.status, 200);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+    assert.equal(body.data.length, 5);
+
+    // The most active product should appear first.
+    assert.equal(body.data[0].name, "Product A");
+    assert.equal(body.data[0].total_in, 10);
+    assert.equal(body.data[0].total_out, 5);
+    assert.equal(body.data[0].total_units_moved, 15);
+    assert.equal(body.data[0].total_movements, 2);
+
+    // The products should be ordered from highest to lowest.
+    for (let i = 0; i < body.data.length - 1; i++) {
+        assert.ok(
+            body.data[i].total_units_moved >=
+            body.data[i + 1].total_units_moved
+        );
+    }
+
+    // Archived products must not appear.
+    assert.equal(
+        body.data.some((product) => product.name === "Archived Product"),
+        false
+    );
+});
