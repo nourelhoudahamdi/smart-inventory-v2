@@ -1,11 +1,14 @@
 const API_URL = "http://localhost:3000/api/products";
 const SUPPLIERS_API_URL = "http://localhost:3000/api/suppliers";
 const ANALYTICS_API_URL = "http://localhost:3000/api/analytics/stock-movements";
+const MOVEMENT_TRENDS_API_URL =
+    "http://localhost:3000/api/analytics/stock-movement-trends";
 
 let allProducts = [];
 let allSuppliers = [];
 let editingSupplierId = null;
 let movementChart = null;
+let movementTrendsChart = null;
 
 // ------------------------------
 // DOM ELEMENTS
@@ -1083,6 +1086,79 @@ movementChart = new Chart(chartCanvas, {
     }
 }
 
+// Load stock movement trends over time
+async function loadMovementTrends() {
+    try {
+        const response = await fetch(MOVEMENT_TRENDS_API_URL);
+        const result = await response.json();
+
+        if (result.status !== "success") {
+            throw new Error("Failed to load movement trends");
+        }
+
+        const labels = result.data.map(
+            item => item.movement_date
+        );
+
+        const stockInData = result.data.map(
+            item => item.total_in
+        );
+
+        const stockOutData = result.data.map(
+            item => item.total_out
+        );
+
+        const chartCanvas = document.getElementById(
+            "movement-trends-chart"
+        );
+
+        if (movementTrendsChart) {
+            movementTrendsChart.destroy();
+        }
+
+        movementTrendsChart = new Chart(chartCanvas, {
+            type: "line",
+
+            data: {
+                labels: labels,
+
+                datasets: [
+                    {
+                        label: "Stock IN",
+                        data: stockInData,
+                        borderColor: "#22c55e",
+                        backgroundColor: "#22c55e",
+                        tension: 0.3
+                    },
+                    {
+                        label: "Stock OUT",
+                        data: stockOutData,
+                        borderColor: "#ef4444",
+                        backgroundColor: "#ef4444",
+                        tension: 0.3
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Error loading movement trends:", error);
+    }
+}
+
 // ------------------------------
 // INITIALIZE APPLICATION
 // ------------------------------
@@ -1092,7 +1168,8 @@ async function initializeDashboard() {
         loadSuppliers(),
         loadProducts(),
         loadDashboard(),
-        loadMovementAnalytics()
+        loadMovementAnalytics(),
+        loadMovementTrends()
     ]);
 }
 
