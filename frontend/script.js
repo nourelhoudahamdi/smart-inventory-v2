@@ -647,6 +647,12 @@ addProductForm.addEventListener("submit", async event => {
     const priceInput =
         document.getElementById("product-price").value;
 
+    const purchasePriceInput =
+        document.getElementById("product-purchase-price").value;
+
+    const sellingPriceInput =
+        document.getElementById("product-selling-price").value;
+
     const minStockInput =
         document.getElementById("product-min-stock").value;
 
@@ -656,6 +662,16 @@ addProductForm.addEventListener("submit", async event => {
     const price = Number(priceInput);
     const min_stock = Number(minStockInput);
 
+    // Empty optional prices become null.
+    const purchase_price = purchasePriceInput.trim() === ""
+        ? null
+        : Number(purchasePriceInput);
+
+    const selling_price = sellingPriceInput.trim() === ""
+        ? null
+        : Number(sellingPriceInput);
+
+    // Validate all product information.
     if (
         !name ||
         quantityInput.trim() === "" ||
@@ -666,7 +682,11 @@ addProductForm.addEventListener("submit", async event => {
         price < 0 ||
         minStockInput.trim() === "" ||
         !Number.isInteger(min_stock) ||
-        min_stock < 0
+        min_stock < 0 ||
+        (purchase_price !== null &&
+            (!Number.isFinite(purchase_price) || purchase_price < 0)) ||
+        (selling_price !== null &&
+            (!Number.isFinite(selling_price) || selling_price < 0))
     ) {
         showMessage(formMessage, "Please enter valid product information.");
         return;
@@ -686,6 +706,8 @@ addProductForm.addEventListener("submit", async event => {
                 name,
                 quantity,
                 price,
+                purchase_price,
+                selling_price,
                 min_stock,
                 supplier_id
             })
@@ -713,6 +735,7 @@ addProductForm.addEventListener("submit", async event => {
 
     } catch (error) {
         console.error("Error adding product:", error);
+
         showMessage(
             formMessage,
             "Could not connect to the server. Check that it is running."

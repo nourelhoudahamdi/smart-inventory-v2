@@ -2,6 +2,18 @@ const db = process.env.NODE_ENV === "test"
     ? require("../../tests/test-database")
     : require("../../database/database");
 
+// Validate optional prices
+const isValidOptionalPrice = (price) => {
+    return (
+        price === null ||
+        (
+            typeof price === "number" &&
+            Number.isFinite(price) &&
+            price >= 0
+        )
+    );
+};
+
 // Get all active products
 const getAllProducts = (req, res) => {
     try {
@@ -62,6 +74,8 @@ const createProduct = (req, res) => {
             name,
             quantity,
             price,
+            purchase_price = null,
+            selling_price = null,
             supplier_id = null
         } = req.body;
 
@@ -77,6 +91,8 @@ const createProduct = (req, res) => {
             typeof price !== "number" ||
             !Number.isFinite(price) ||
             price < 0 ||
+            !isValidOptionalPrice(purchase_price) ||
+            !isValidOptionalPrice(selling_price) ||
             !Number.isInteger(min_stock) ||
             min_stock < 0 ||
             !isValidSupplier(supplier_id)
@@ -92,14 +108,18 @@ const createProduct = (req, res) => {
                 name,
                 quantity,
                 price,
+                purchase_price,
+                selling_price,
                 min_stock,
                 supplier_id
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `).run(
             name.trim(),
             quantity,
             price,
+            purchase_price,
+            selling_price,
             min_stock,
             supplier_id
         );
@@ -137,6 +157,7 @@ const createProduct = (req, res) => {
 const updateProduct = (req, res) => {
     try {
         const id = Number(req.params.id);
+
         const { name, quantity, price } = req.body;
 
         if (!Number.isInteger(id) || id <= 0) {
@@ -169,6 +190,14 @@ const updateProduct = (req, res) => {
             ? existingProduct.supplier_id
             : req.body.supplier_id;
 
+        const purchase_price = req.body.purchase_price === undefined
+            ? existingProduct.purchase_price
+            : req.body.purchase_price;
+
+        const selling_price = req.body.selling_price === undefined
+            ? existingProduct.selling_price
+            : req.body.selling_price;
+
         if (
             typeof name !== "string" ||
             name.trim() === "" ||
@@ -177,6 +206,8 @@ const updateProduct = (req, res) => {
             typeof price !== "number" ||
             !Number.isFinite(price) ||
             price < 0 ||
+            !isValidOptionalPrice(purchase_price) ||
+            !isValidOptionalPrice(selling_price) ||
             !Number.isInteger(min_stock) ||
             min_stock < 0 ||
             !isValidSupplier(supplier_id)
@@ -193,6 +224,8 @@ const updateProduct = (req, res) => {
                 name = ?,
                 quantity = ?,
                 price = ?,
+                purchase_price = ?,
+                selling_price = ?,
                 min_stock = ?,
                 supplier_id = ?
             WHERE id = ?
@@ -200,6 +233,8 @@ const updateProduct = (req, res) => {
             name.trim(),
             quantity,
             price,
+            purchase_price,
+            selling_price,
             min_stock,
             supplier_id,
             id

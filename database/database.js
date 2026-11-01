@@ -112,6 +112,40 @@ if (!hasSupplierId) {
     console.log("Database migration skipped: supplier_id already exists.");
 }
 
+// Add purchase_price if the column is missing.
+const hasPurchasePrice = productColumns.some(
+    (column) => column.name === "purchase_price"
+);
+
+if (!hasPurchasePrice) {
+    db.exec(`
+        ALTER TABLE products
+        ADD COLUMN purchase_price REAL
+        CHECK (purchase_price IS NULL OR purchase_price >= 0);
+    `);
+
+    console.log("Database migration successful: purchase_price added.");
+} else {
+    console.log("Database migration skipped: purchase_price already exists.");
+}
+
+// Add selling_price if the column is missing.
+const hasSellingPrice = productColumns.some(
+    (column) => column.name === "selling_price"
+);
+
+if (!hasSellingPrice) {
+    db.exec(`
+        ALTER TABLE products
+        ADD COLUMN selling_price REAL
+        CHECK (selling_price IS NULL OR selling_price >= 0);
+    `);
+
+    console.log("Database migration successful: selling_price added.");
+} else {
+    console.log("Database migration skipped: selling_price already exists.");
+}
+
 console.log("Products table is ready!");
 console.log("Stock movements table is ready!");
 
