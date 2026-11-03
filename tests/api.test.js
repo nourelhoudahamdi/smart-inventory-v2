@@ -1325,3 +1325,151 @@ test("GET /api/analytics/top-active-products returns the top 5 active products",
         false
     );
 });
+
+// ================================
+// Sales API Tests
+// ================================
+
+test("POST /api/sales records a sale and updates stock", async (t) => {
+    const db = require("./test-database");
+
+    const product = db.prepare(`
+        INSERT INTO products
+            (name, quantity, price, purchase_price, selling_price)
+        VALUES (?, ?, ?, ?, ?)
+    `).run("Sales Success Test", 10, 100, 70, 100);
+
+    const productId = Number(product.lastInsertRowid);
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(async () => {
+        db.prepare("DELETE FROM sales WHERE product_id = ?").run(productId);
+        db.prepare("DELETE FROM stock_movements WHERE product_id = ?").run(productId);
+        db.prepare("DELETE FROM products WHERE id = ?").run(productId);
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/sales`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 2
+            })
+        }
+    );
+
+    assert.equal(response.status, 201);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "success");
+    assert.equal(body.data.total_revenue, 200);
+    assert.equal(body.data.total_cost, 140);
+
+    const updatedProduct = db.prepare(
+        "SELECT quantity FROM products WHERE id = ?"
+    ).get(productId);
+
+    assert.equal(updatedProduct.quantity, 8);
+
+    const movement = db.prepare(
+        "SELECT movement_type, quantity FROM stock_movements WHERE product_id = ?"
+    ).get(productId);
+
+    assert.equal(movement.movement_type, "OUT");
+    assert.equal(movement.quantity, 2);
+});
+
+
+test("POST /api/sales rejects insufficient stock", async (t) => {
+    const db = require("./test-database");
+
+    const product = db.prepare(`
+        INSERT INTO products
+            (name, quantity, price, purchase_price, selling_price)
+        VALUES (?, ?, ?, ?, ?)
+    `).run("Sales Insufficient Test", 3, 100, 70, 100);
+
+    const productId = Number(product.lastInsertRowid);
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(async () => {
+        db.prepare("DELETE FROM sales WHERE product_id = ?").run(productId);
+        db.prepare("DELETE FROM stock_movements WHERE product_id = ?").run(productId);
+        db.prepare("DELETE FROM products WHERE id = ?").run(productId);
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/sales`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 5
+            })
+        }
+    );
+
+    assert.equal(response.status, 400);
+
+    const updatedProduct = db.prepare(
+        "SELECT quantity FROM products WHERE id = ?"
+    ).get(productId);
+
+    assert.equal(updatedProduct.quantity, 3);
+
+    const saleCount = db.prepare(
+        "SELECT COUNT(*) AS count FROM sales WHERE product_id = ?"
+    ).get(productId);
+
+    assert.equal(saleCount.count, 0);
+});
+
+
+test("POST /api/sales rejects products with missing prices", async (t) => {
+    const db = require("./test-database");
+
+    const product = db.prepare(`
+        INSERT INTO products (name, quantity, price)
+        VALUES (?, ?, ?)
+    `).run("Sales Missing Prices Test", 10, 100);
+
+    const productId = Number(product.lastInsertRowid);
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(async () => {
+        db.prepare("DELETE FROM products WHERE id = ?").run(productId);
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/sales`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 2
+            })
+        }
+    );
+
+    assert.equal(response.status, 400);
+
+    const updatedProduct = db.prepare(
+        "SELECT quantity FROM products WHERE id = ?"
+    ).get(productId);
+
+    assert.equal(updatedProduct.quantity, 10);
+});

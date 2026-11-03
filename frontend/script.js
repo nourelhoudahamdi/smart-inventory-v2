@@ -5,9 +5,11 @@ const MOVEMENT_TRENDS_API_URL =
     "http://localhost:3000/api/analytics/stock-movement-trends";
 const TOP_PRODUCTS_API_URL =
     "http://localhost:3000/api/analytics/top-active-products";
+const SALES_API_URL = "http://localhost:3000/api/sales";
 
 let allProducts = [];
 let allSuppliers = [];
+let allSales = [];
 let editingSupplierId = null;
 let movementChart = null;
 let movementTrendsChart = null;
@@ -35,6 +37,15 @@ const supplierForm = document.getElementById("supplier-form");
 const supplierMessage = document.getElementById("supplier-message");
 const suppliersTableBody = document.getElementById("suppliers-table-body");
 
+// SALES: DOM ELEMENTS
+const saleForm = document.getElementById("sale-form");
+const saleProductSelect = document.getElementById("sale-product");
+const saleQuantityInput = document.getElementById("sale-quantity");
+const saleMessage = document.getElementById("sale-message");
+
+const totalSalesElement = document.getElementById("total-sales");
+const totalRevenueElement = document.getElementById("total-revenue");
+const salesTableBody = document.getElementById("sales-table-body");
 
 // ------------------------------
 // HELPER: SHOW MESSAGE
@@ -443,6 +454,7 @@ async function loadProducts() {
         allProducts = result.data;
         renderProducts();
         renderReorderSuggestions();
+        renderSaleProductOptions();
 
     } catch (error) {
         console.error("Error loading products:", error);
@@ -461,6 +473,34 @@ async function loadProducts() {
     }
 }
 
+// ------------------------------
+// SALES: LOAD ELIGIBLE PRODUCTS
+// ------------------------------
+
+function renderSaleProductOptions() {
+    saleProductSelect.innerHTML =
+        '<option value="">Select a product</option>';
+
+    const eligibleProducts = allProducts.filter(product => {
+        return (
+            Number(product.quantity) > 0 &&
+            product.purchase_price !== null &&
+            product.purchase_price !== undefined &&
+            product.selling_price !== null &&
+            product.selling_price !== undefined
+        );
+    });
+
+    eligibleProducts.forEach(product => {
+        const option = document.createElement("option");
+
+        option.value = product.id;
+        option.textContent =
+            `${product.name} — Stock: ${product.quantity} — Price: ${product.selling_price} MAD`;
+
+        saleProductSelect.appendChild(option);
+    });
+}
 
 // ------------------------------
 // PRODUCTS: DISPLAY TABLE
@@ -1238,6 +1278,166 @@ async function loadTopActiveProducts() {
 }
 
 // ------------------------------
+// SALES: LOAD AND DISPLAY
+// ------------------------------
+
+async function loadSales() {
+    try {
+        const response = await fetch(SALES_API_URL);
+
+        if (!response.ok) {
+            throw new Error("Failed to load sales");
+        }
+
+        const result = await response.json();
+
+        allSales = result.data;
+
+        renderSales();
+
+    } catch (error) {
+        console.error("Sales loading error:", error);
+
+        totalSalesElement.textContent = "Unavailable";
+        totalRevenueElement.textContent = "Unavailable";
+        salesTableBody.textContent = "";
+
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 7;
+        cell.textContent = "Could not load sales.";
+
+        row.appendChild(cell);
+        salesTableBody.appendChild(row);
+    }
+}
+
+
+function renderSales() {
+    // Calculate total revenue
+    const totalRevenue = allSales.reduce(
+        (sum, sale) => sum + Number(sale.total_revenue),
+        0
+    );
+
+    // Update summary
+    totalSalesElement.textContent = allSales.length;
+
+    totalRevenueElement.textContent =
+        `${totalRevenue.toLocaleString("en-US")} MAD`;
+
+    // Display sales history
+    salesTableBody.textContent = "";
+
+    if (allSales.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 7;
+        cell.textContent = "No sales recorded yet.";
+
+        row.appendChild(cell);
+        salesTableBody.appendChild(row);
+
+        return;
+    }
+
+    allSales.forEach(sale => {
+        const row = document.createElement("tr");
+
+        const values = [
+            sale.id,
+            sale.product_name,
+            sale.quantity,
+            `${Number(sale.unit_price).toLocaleString("en-US")} MAD`,
+            `${Number(sale.total_revenue).toLocaleString("en-US")} MAD`,
+            `${Number(sale.total_cost).toLocaleString("en-US")} MAD`,
+            sale.sold_at
+        ];
+
+        values.forEach(value => {
+            const cell = document.createElement("td");
+            cell.textContent = String(value);
+            row.appendChild(cell);
+        });
+
+        salesTableBody.appendChild(row);
+    });
+}
+
+// ------------------------------
+// SALES: RECORD A NEW SALE
+// ------------------------------
+
+saleForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const productId = Number(saleProductSelect.value);
+    const quantity = Number(saleQuantityInput.value);
+
+    // Validate input
+    if (
+        !Number.isInteger(productId) ||
+        productId <= 0 ||
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+    ) {
+        showMessage(saleMessage, "Please select a product and enter a valid quantity.");
+        return;
+    }
+
+    try {
+        const response = await fetch(SALES_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            showMessage(
+                saleMessage,
+                result.message || "Could not record sale."
+            );
+            return;
+        }
+
+        showMessage(
+            saleMessage,
+            "Sale recorded successfully!",
+            true
+        );
+
+        saleForm.reset();
+
+        // Refresh data after the sale
+        await Promise.all([
+            loadProducts(),
+            loadDashboard(),
+            loadMovementAnalytics(),
+            loadMovementTrends(),
+            loadTopActiveProducts(),
+            loadSales()
+        ]);
+
+    } catch (error) {
+        console.error("Error recording sale:", error);
+
+        showMessage(
+            saleMessage,
+            "Could not connect to the server."
+        );
+    }
+});
+
+// ------------------------------
 // INITIALIZE APPLICATION
 // ------------------------------
 
@@ -1248,7 +1448,9 @@ async function initializeDashboard() {
         loadDashboard(),
         loadMovementAnalytics(),
         loadMovementTrends(),
-        loadTopActiveProducts()
+        loadTopActiveProducts(),
+        loadTopActiveProducts(),
+        loadSales()
     ]);
 }
 

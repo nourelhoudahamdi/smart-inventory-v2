@@ -4,6 +4,7 @@ const path = require("path");
 const productRoutes = require("./routes/productRoutes");
 const supplierRoutes = require("./routes/supplierRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
+const salesRoutes = require("./routes/salesRoutes");
 
 const app = express();
 const PORT = 3000;
@@ -32,6 +33,7 @@ message: "API is working correctly"
 app.use("/api/products", productRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/sales", salesRoutes);
 
 // Start the server only when this file is run directly
 if (require.main === module) {

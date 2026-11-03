@@ -60,4 +60,21 @@ db.exec(`
     );
 `);
 
+// Create the sales history table.
+db.exec(`
+    CREATE TABLE sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL CHECK (quantity > 0),
+        unit_price REAL NOT NULL CHECK (unit_price >= 0),
+        unit_cost REAL NOT NULL CHECK (unit_cost >= 0),
+        total_revenue REAL NOT NULL CHECK (total_revenue >= 0),
+        total_cost REAL NOT NULL CHECK (total_cost >= 0),
+        sold_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id)
+            REFERENCES products(id)
+            ON DELETE RESTRICT
+    );
+`);
+
 module.exports = db;
