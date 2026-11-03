@@ -70,6 +70,7 @@ const isValidSupplier = (supplierId) => {
 // Create a product
 const createProduct = (req, res) => {
     try {
+        console.log("DEBUG CREATE PRODUCT BODY:", req.body);
         const {
             name,
             quantity,
