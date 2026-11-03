@@ -117,82 +117,185 @@
 
         </section>
 
+
         <!-- ================= 3. SALES MANAGEMENT ================= -->
-<section id="sales-section">
+        <section id="sales-section">
 
-    <h2>Sales Management</h2>
-    <p>Record sales and monitor revenue.</p>
+            <h2>Sales Management</h2>
+            <p>Record sales and monitor revenue.</p>
 
-    <!-- Sales Summary -->
-    <div class="stats-container">
-        <div class="stat-card">
-            <h3>Total Sales</h3>
-            <p id="total-sales">0</p>
-        </div>
+            <!-- Sales Summary -->
+            <div class="stats-container">
 
-        <div class="stat-card">
-            <h3>Total Revenue</h3>
-            <p id="total-revenue">0 MAD</p>
-        </div>
-    </div>
+                <div class="stat-card">
+                    <h3>Total Sales</h3>
+                    <p id="total-sales">0</p>
+                </div>
 
-    <!-- New Sale Form -->
-    <h3>Record a New Sale</h3>
+                <div class="stat-card">
+                    <h3>Total Revenue</h3>
+                    <p id="total-revenue">0 MAD</p>
+                </div>
 
-    <form id="sale-form">
+            </div>
 
-        <div>
-            <label for="sale-product">Product</label>
-            <select id="sale-product" required>
-                <option value="">Select a product</option>
-            </select>
-        </div>
+            <!-- New Sale Form -->
+            <h3>Record a New Sale</h3>
 
-        <div>
-            <label for="sale-quantity">Quantity</label>
-            <input
-                type="number"
-                id="sale-quantity"
-                min="1"
-                step="1"
-                required
-            >
-        </div>
+            <form id="sale-form">
 
-        <button type="submit">Record Sale</button>
+                <div>
+                    <label for="sale-product">Product</label>
+                    <select id="sale-product" required>
+                        <option value="">Select a product</option>
+                    </select>
+                </div>
 
-        <p id="sale-message"></p>
+                <div>
+                    <label for="sale-quantity">Quantity</label>
+                    <input
+                        type="number"
+                        id="sale-quantity"
+                        min="1"
+                        step="1"
+                        required
+                    >
+                </div>
 
-    </form>
+                <button type="submit">Record Sale</button>
 
-    <!-- Sales History -->
-    <h3>Sales History</h3>
+                <p id="sale-message"></p>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Sale ID</th>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Total Revenue</th>
-                    <th>Total Cost</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
+            </form>
 
-            <tbody id="sales-table-body">
-                <tr>
-                    <td colspan="7">Loading sales...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+            <!-- Sales History -->
+            <h3>Sales History</h3>
 
-</section>
+            <div class="table-container">
 
-        <!-- ================= 4. SMART REORDER SUGGESTIONS ================= -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sale ID</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total Revenue</th>
+                            <th>Total Cost</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="sales-table-body">
+                        <tr>
+                            <td colspan="7">Loading sales...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= 4. PROFIT ANALYTICS ================= -->
+        <section id="profit-section">
+
+            <h2>Profit Analytics</h2>
+            <p>Monitor revenue, costs and profitability.</p>
+
+            <!-- Date Filters -->
+            <div class="profit-filters">
+
+                <div>
+                    <label for="profit-start-date">Start Date</label>
+                    <input type="date" id="profit-start-date">
+                </div>
+
+                <div>
+                    <label for="profit-end-date">End Date</label>
+                    <input type="date" id="profit-end-date">
+                </div>
+
+                <button type="button" id="filter-profit-btn">
+                    Apply Filter
+                </button>
+
+                <button type="button" id="reset-profit-btn">
+                    Reset
+                </button>
+
+            </div>
+
+
+            <!-- Profit Summary -->
+            <h3>Profit Summary</h3>
+
+            <div class="stats-container">
+
+                <div class="stat-card">
+                    <h3>Total Revenue</h3>
+                    <p id="profit-revenue">0 MAD</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Total Cost</h3>
+                    <p id="profit-cost">0 MAD</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Gross Profit</h3>
+                    <p id="gross-profit">0 MAD</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Profit Margin</h3>
+                    <p id="profit-margin">0%</p>
+                </div>
+
+            </div>
+
+
+            <!-- Profit by Product -->
+            <h3>Profit by Product</h3>
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity Sold</th>
+                            <th>Revenue</th>
+                            <th>Cost</th>
+                            <th>Gross Profit</th>
+                            <th>Profit Margin</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="profit-products-table">
+                        <tr>
+                            <td colspan="6">Loading profit data...</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- Profit Trends -->
+            <h3>Profit Trends</h3>
+
+            <div class="chart-container">
+                <canvas id="profit-trends-chart"></canvas>
+            </div>
+
+        </section>
+
+
+        <!-- ================= 5. SMART REORDER SUGGESTIONS ================= -->
         <section id="reorder-section">
 
             <h2>Smart Reorder Suggestions</h2>
@@ -205,7 +308,7 @@
         </section>
 
 
-        <!-- ================= 5. ADD NEW PRODUCT ================= -->
+        <!-- ================= 6. ADD NEW PRODUCT ================= -->
         <section id="add-product-section">
 
             <h2>Add New Product</h2>
@@ -314,7 +417,7 @@
         </section>
 
 
-        <!-- ================= 6. PRODUCTS ================= -->
+        <!-- ================= 7. PRODUCTS ================= -->
         <section id="products-section">
 
             <h2>Products</h2>
@@ -383,7 +486,7 @@
         </section>
 
 
-        <!-- ================= 7. SUPPLIER MANAGEMENT ================= -->
+        <!-- ================= 8. SUPPLIER MANAGEMENT ================= -->
         <section id="suppliers-section">
 
             <h2>Supplier Management</h2>

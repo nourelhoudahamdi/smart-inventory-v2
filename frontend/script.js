@@ -6,6 +6,8 @@ const MOVEMENT_TRENDS_API_URL =
 const TOP_PRODUCTS_API_URL =
     "http://localhost:3000/api/analytics/top-active-products";
 const SALES_API_URL = "http://localhost:3000/api/sales";
+const PROFIT_API_URL = "http://localhost:3000/api/profit";
+
 
 let allProducts = [];
 let allSuppliers = [];
@@ -13,6 +15,7 @@ let allSales = [];
 let editingSupplierId = null;
 let movementChart = null;
 let movementTrendsChart = null;
+let profitTrendsChart = null;
 
 // ------------------------------
 // DOM ELEMENTS
@@ -1424,7 +1427,8 @@ saleForm.addEventListener("submit", async event => {
             loadMovementAnalytics(),
             loadMovementTrends(),
             loadTopActiveProducts(),
-            loadSales()
+            loadSales(),
+            loadProfitAnalytics()
         ]);
 
     } catch (error) {
@@ -1438,6 +1442,200 @@ saleForm.addEventListener("submit", async event => {
 });
 
 // ------------------------------
+// PROFIT ANALYTICS
+// ------------------------------
+
+async function loadProfitAnalytics(startDate = "", endDate = "") {
+
+    const params = new URLSearchParams();
+
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+
+    const query = params.toString()
+        ? `?${params.toString()}`
+        : "";
+
+    try {
+        const [summaryResponse, productsResponse, trendsResponse] =
+            await Promise.all([
+                fetch(`${PROFIT_API_URL}/summary${query}`),
+                fetch(`${PROFIT_API_URL}/products${query}`),
+                fetch(`${PROFIT_API_URL}/trends${query}`)
+            ]);
+
+        if (
+            !summaryResponse.ok ||
+            !productsResponse.ok ||
+            !trendsResponse.ok
+        ) {
+            throw new Error("Failed to load profit analytics.");
+        }
+
+        const summaryResult = await summaryResponse.json();
+        const productsResult = await productsResponse.json();
+        const trendsResult = await trendsResponse.json();
+
+        if (
+            summaryResult.status !== "success" ||
+            productsResult.status !== "success" ||
+            trendsResult.status !== "success"
+        ) {
+            throw new Error("Profit API returned an error.");
+        }
+
+        renderProfitSummary(summaryResult.data);
+        renderProfitByProduct(productsResult.data);
+        renderProfitTrends(trendsResult.data);
+
+    } catch (error) {
+        console.error("Profit Analytics error:", error);
+    }
+}
+
+
+// PROFIT SUMMARY
+
+function renderProfitSummary(data) {
+
+    document.getElementById("profit-revenue").textContent =
+        `${Number(data.total_revenue).toLocaleString("en-US")} MAD`;
+
+    document.getElementById("profit-cost").textContent =
+        `${Number(data.total_cost).toLocaleString("en-US")} MAD`;
+
+    document.getElementById("gross-profit").textContent =
+        `${Number(data.gross_profit).toLocaleString("en-US")} MAD`;
+
+    document.getElementById("profit-margin").textContent =
+        `${Number(data.profit_margin).toFixed(2)}%`;
+}
+
+
+// PROFIT BY PRODUCT
+
+function renderProfitByProduct(products) {
+
+    const tableBody = document.getElementById("profit-products-table");
+
+    tableBody.textContent = "";
+
+    if (products.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 6;
+        cell.textContent = "No profit data available for this period.";
+
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+        return;
+    }
+
+    products.forEach(product => {
+
+        const row = document.createElement("tr");
+
+        const values = [
+            product.product_name,
+            product.total_quantity_sold,
+            `${Number(product.total_revenue).toLocaleString("en-US")} MAD`,
+            `${Number(product.total_cost).toLocaleString("en-US")} MAD`,
+            `${Number(product.gross_profit).toLocaleString("en-US")} MAD`,
+            `${Number(product.profit_margin).toFixed(2)}%`
+        ];
+
+        values.forEach(value => {
+            const cell = document.createElement("td");
+            cell.textContent = String(value);
+            row.appendChild(cell);
+        });
+
+        tableBody.appendChild(row);
+    });
+}
+
+
+// PROFIT TRENDS
+
+function renderProfitTrends(trends) {
+
+    const canvas = document.getElementById("profit-trends-chart");
+
+    if (!canvas) return;
+
+    if (profitTrendsChart) {
+        profitTrendsChart.destroy();
+    }
+
+    profitTrendsChart = new Chart(canvas, {
+
+        type: "line",
+
+        data: {
+            labels: trends.map(item => item.sale_date),
+
+            datasets: [{
+                label: "Gross Profit (MAD)",
+                data: trends.map(item => item.gross_profit),
+                borderColor: "#16a34a",
+                backgroundColor: "#16a34a",
+                tension: 0.3
+            }]
+        },
+
+        options: {
+            responsive: true,
+
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+
+// PROFIT DATE FILTERS
+
+const filterProfitButton =
+    document.getElementById("filter-profit-btn");
+
+const resetProfitButton =
+    document.getElementById("reset-profit-btn");
+
+if (filterProfitButton) {
+
+    filterProfitButton.addEventListener("click", () => {
+
+        const startDate =
+            document.getElementById("profit-start-date").value;
+
+        const endDate =
+            document.getElementById("profit-end-date").value;
+
+        if (startDate && endDate && startDate > endDate) {
+            alert("Start date must be before or equal to end date.");
+            return;
+        }
+
+        loadProfitAnalytics(startDate, endDate);
+    });
+}
+
+if (resetProfitButton) {
+
+    resetProfitButton.addEventListener("click", () => {
+
+        document.getElementById("profit-start-date").value = "";
+        document.getElementById("profit-end-date").value = "";
+
+        loadProfitAnalytics();
+    });
+}
+
+// ------------------------------
 // INITIALIZE APPLICATION
 // ------------------------------
 
@@ -1449,8 +1647,8 @@ async function initializeDashboard() {
         loadMovementAnalytics(),
         loadMovementTrends(),
         loadTopActiveProducts(),
-        loadTopActiveProducts(),
-        loadSales()
+        loadSales(),
+        loadProfitAnalytics()
     ]);
 }
 
