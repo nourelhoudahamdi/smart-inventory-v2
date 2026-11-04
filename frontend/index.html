@@ -1,596 +1,680 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Smart Inventory & Supply Tracker</title>
-    <link rel="stylesheet" href="style.css">
+
+<title>Smart Inventory & Supply Tracker</title>
+<link rel="stylesheet" href="style.css">
+
+
 </head>
 
 <body>
 
-    <!-- ================= HEADER ================= -->
-    <header>
-        <h1>Smart Inventory</h1>
-        <p>Inventory & Supply Tracker</p>
-    </header>
+<!-- ================= HEADER ================= -->
+<header>
+    <h1>Smart Inventory</h1>
+    <p>Inventory & Supply Tracker</p>
+</header>
 
-    <main>
+<main>
 
-        <!-- ================= 1. DASHBOARD ================= -->
-        <section id="dashboard-section">
+    <!-- ================= 1. DASHBOARD ================= -->
+    <section id="dashboard-section">
 
-            <h2>Dashboard</h2>
-            <p>Welcome to your inventory management system.</p>
+        <h2>Dashboard</h2>
+        <p>Welcome to your inventory management system.</p>
 
-            <div class="stats-container">
+        <div class="stats-container">
 
-                <div class="stat-card">
-                    <h3>Total Products</h3>
-                    <p id="total-products">0</p>
-                </div>
-
-                <div class="stat-card">
-                    <h3>Total Quantity</h3>
-                    <p id="total-quantity">0</p>
-                </div>
-
-                <div class="stat-card">
-                    <h3>Inventory Value</h3>
-                    <p id="inventory-value">0 MAD</p>
-                </div>
-
-                <div class="stat-card">
-                    <h3>Low Stock Products</h3>
-                    <p id="low-stock-count">0</p>
-                </div>
-
+            <div class="stat-card">
+                <h3>Total Products</h3>
+                <p id="total-products">0</p>
             </div>
 
-        </section>
-
-
-        <!-- ================= 2. STOCK MOVEMENT ANALYTICS ================= -->
-        <section id="analytics-section">
-
-            <h2>Stock Movement Analytics</h2>
-            <p>Overview of stock movements.</p>
-
-            <div class="stats-container">
-
-                <div class="stat-card">
-                    <h3>Total Stock IN</h3>
-                    <p id="total-stock-in">Loading...</p>
-                </div>
-
-                <div class="stat-card">
-                    <h3>Total Stock OUT</h3>
-                    <p id="total-stock-out">Loading...</p>
-                </div>
-
-                <div class="stat-card">
-                    <h3>Net Movement</h3>
-                    <p id="net-movement">Loading...</p>
-                </div>
-
+            <div class="stat-card">
+                <h3>Total Quantity</h3>
+                <p id="total-quantity">0</p>
             </div>
 
-            <div class="chart-container">
+            <div class="stat-card">
+                <h3>Inventory Value</h3>
+                <p id="inventory-value">0 MAD</p>
+            </div>
 
-                <h3>Stock Movement Overview</h3>
+            <div class="stat-card">
+                <h3>Low Stock Products</h3>
+                <p id="low-stock-count">0</p>
+            </div>
 
+        </div>
+
+    </section>
+
+
+    <!-- ================= 2. STOCK MOVEMENT ANALYTICS ================= -->
+    <section id="analytics-section">
+
+        <h2>Stock Movement Analytics</h2>
+        <p>Overview of stock movements.</p>
+
+        <div class="stats-container">
+
+            <div class="stat-card">
+                <h3>Total Stock IN</h3>
+                <p id="total-stock-in">Loading...</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Stock OUT</h3>
+                <p id="total-stock-out">Loading...</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Net Movement</h3>
+                <p id="net-movement">Loading...</p>
+            </div>
+
+        </div>
+
+        <!-- Stock Movement Charts -->
+        <div class="movement-charts">
+
+            <div class="chart-box">
+                <h3>Stock IN vs Stock OUT</h3>
                 <canvas id="stock-movement-chart"></canvas>
+            </div>
 
+            <div class="chart-box">
+                <h3>Movement Trends</h3>
                 <canvas id="movement-trends-chart"></canvas>
-
             </div>
 
-            <!-- Top 5 Most Active Products -->
-            <div class="top-products-container">
+        </div>
 
-                <h3>Top 5 Most Active Products</h3>
-                <p>Products with the highest stock movement activity.</p>
+        <!-- Top 5 Most Active Products -->
+        <div class="top-products-container">
 
-                <table id="top-products-table">
+            <h3>Top 5 Most Active Products</h3>
+            <p>Products with the highest stock movement activity.</p>
 
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Total IN</th>
-                            <th>Total OUT</th>
-                            <th>Units Moved</th>
-                            <th>Movements</th>
-                        </tr>
-                    </thead>
+            <table id="top-products-table">
 
-                    <tbody id="top-products-body">
-                        <tr>
-                            <td colspan="5">Loading...</td>
-                        </tr>
-                    </tbody>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Total IN</th>
+                        <th>Total OUT</th>
+                        <th>Units Moved</th>
+                        <th>Movements</th>
+                    </tr>
+                </thead>
 
-                </table>
+                <tbody id="top-products-body">
+                    <tr>
+                        <td colspan="5">Loading...</td>
+                    </tr>
+                </tbody>
 
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= 3. SALES MANAGEMENT ================= -->
+    <section id="sales-section">
+
+        <h2>Sales Management</h2>
+        <p>Record sales and monitor revenue.</p>
+
+        <!-- Sales Summary -->
+        <div class="stats-container">
+
+            <div class="stat-card">
+                <h3>Total Sales</h3>
+                <p id="total-sales">0</p>
             </div>
 
-        </section>
-
-
-        <!-- ================= 3. SALES MANAGEMENT ================= -->
-        <section id="sales-section">
-
-            <h2>Sales Management</h2>
-            <p>Record sales and monitor revenue.</p>
-
-            <!-- Sales Summary -->
-            <div class="stats-container">
-
-                <div class="stat-card">
-                    <h3>Total Sales</h3>
-                    <p id="total-sales">0</p>
-                </div>
-
-                <div class="stat-card">
-                    <h3>Total Revenue</h3>
-                    <p id="total-revenue">0 MAD</p>
-                </div>
-
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <p id="total-revenue">0 MAD</p>
             </div>
 
-            <!-- New Sale Form -->
-            <h3>Record a New Sale</h3>
+        </div>
 
-            <form id="sale-form">
+        <!-- New Sale Form -->
+        <h3>Record a New Sale</h3>
 
-                <div>
-                    <label for="sale-product">Product</label>
-                    <select id="sale-product" required>
-                        <option value="">Select a product</option>
-                    </select>
-                </div>
+        <form id="sale-form">
 
-                <div>
-                    <label for="sale-quantity">Quantity</label>
-                    <input
-                        type="number"
-                        id="sale-quantity"
-                        min="1"
-                        step="1"
-                        required
-                    >
-                </div>
-
-                <button type="submit">Record Sale</button>
-
-                <p id="sale-message"></p>
-
-            </form>
-
-            <!-- Sales History -->
-            <h3>Sales History</h3>
-
-            <div class="table-container">
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Sale ID</th>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Total Revenue</th>
-                            <th>Total Cost</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="sales-table-body">
-                        <tr>
-                            <td colspan="7">Loading sales...</td>
-                        </tr>
-                    </tbody>
-                </table>
-
+            <div>
+                <label for="sale-product">Product</label>
+                <select id="sale-product" required>
+                    <option value="">Select a product</option>
+                </select>
             </div>
 
-        </section>
-
-
-        <!-- ================= 4. PROFIT ANALYTICS ================= -->
-        <section id="profit-section">
-
-            <h2>Profit Analytics</h2>
-            <p>Monitor revenue, costs and profitability.</p>
-
-            <!-- Date Filters -->
-            <div class="profit-filters">
-
-                <div>
-                    <label for="profit-start-date">Start Date</label>
-                    <input type="date" id="profit-start-date">
-                </div>
-
-                <div>
-                    <label for="profit-end-date">End Date</label>
-                    <input type="date" id="profit-end-date">
-                </div>
-
-                <button type="button" id="filter-profit-btn">
-                    Apply Filter
-                </button>
-
-                <button type="button" id="reset-profit-btn">
-                    Reset
-                </button>
-
+            <div>
+                <label for="sale-quantity">Quantity</label>
+                <input
+                    type="number"
+                    id="sale-quantity"
+                    min="1"
+                    step="1"
+                    required
+                >
             </div>
 
+            <button type="submit">Record Sale</button>
 
-            <!-- Profit Summary -->
-            <h3>Profit Summary</h3>
+            <p id="sale-message"></p>
 
-            <div class="stats-container">
+        </form>
 
-                <div class="stat-card">
-                    <h3>Total Revenue</h3>
-                    <p id="profit-revenue">0 MAD</p>
-                </div>
+        <!-- Sales History -->
+        <h3>Sales History</h3>
 
-                <div class="stat-card">
-                    <h3>Total Cost</h3>
-                    <p id="profit-cost">0 MAD</p>
-                </div>
+        <div class="table-container">
 
-                <div class="stat-card">
-                    <h3>Gross Profit</h3>
-                    <p id="gross-profit">0 MAD</p>
-                </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sale ID</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Revenue</th>
+                        <th>Total Cost</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
 
-                <div class="stat-card">
-                    <h3>Profit Margin</h3>
-                    <p id="profit-margin">0%</p>
-                </div>
+                <tbody id="sales-table-body">
+                    <tr>
+                        <td colspan="7">Loading sales...</td>
+                    </tr>
+                </tbody>
+            </table>
 
+        </div>
+
+    </section>
+
+
+    <!-- ================= 4. SALES PERFORMANCE ANALYTICS ================= -->
+    <section id="sales-analytics-section">
+
+        <h2>Sales Performance Analytics</h2>
+        <p>Analyze sales performance and identify best-selling products.</p>
+
+        <!-- Date Filters -->
+        <div class="sales-analytics-filters">
+
+            <div>
+                <label for="sales-analytics-start-date">Start Date</label>
+                <input type="date" id="sales-analytics-start-date">
             </div>
 
-
-            <!-- Profit by Product -->
-            <h3>Profit by Product</h3>
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Quantity Sold</th>
-                            <th>Revenue</th>
-                            <th>Cost</th>
-                            <th>Gross Profit</th>
-                            <th>Profit Margin</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="profit-products-table">
-                        <tr>
-                            <td colspan="6">Loading profit data...</td>
-                        </tr>
-                    </tbody>
-
-                </table>
-
+            <div>
+                <label for="sales-analytics-end-date">End Date</label>
+                <input type="date" id="sales-analytics-end-date">
             </div>
 
+            <button type="button" id="filter-sales-analytics-btn">
+                Apply Filter
+            </button>
 
-            <!-- Profit Trends -->
-            <h3>Profit Trends</h3>
+            <button type="button" id="reset-sales-analytics-btn">
+                Reset
+            </button>
 
-            <div class="chart-container">
-                <canvas id="profit-trends-chart"></canvas>
+        </div>
+
+        <!-- Sales KPI Cards -->
+        <div class="sales-analytics-kpis">
+
+            <div class="kpi-card">
+                <h3>Total Sales</h3>
+                <p id="sales-analytics-total-sales">0</p>
             </div>
 
-        </section>
-
-
-        <!-- ================= 5. SMART REORDER SUGGESTIONS ================= -->
-        <section id="reorder-section">
-
-            <h2>Smart Reorder Suggestions</h2>
-            <p>Products that need restocking.</p>
-
-            <div id="reorder-suggestions">
-                <p>Loading reorder suggestions...</p>
+            <div class="kpi-card">
+                <h3>Total Revenue</h3>
+                <p id="sales-analytics-total-revenue">0 MAD</p>
             </div>
 
-        </section>
-
-
-        <!-- ================= 6. ADD NEW PRODUCT ================= -->
-        <section id="add-product-section">
-
-            <h2>Add New Product</h2>
-
-            <form id="add-product-form">
-
-                <!-- Product Name -->
-                <div>
-                    <label for="product-name">Product Name</label>
-                    <input
-                        type="text"
-                        id="product-name"
-                        placeholder="Enter product name"
-                        required
-                    >
-                </div>
-
-                <!-- Quantity -->
-                <div>
-                    <label for="product-quantity">Quantity</label>
-                    <input
-                        type="number"
-                        id="product-quantity"
-                        min="0"
-                        step="1"
-                        placeholder="Enter quantity"
-                        required
-                    >
-                </div>
-
-                <!-- Legacy Price -->
-                <div>
-                    <label for="product-price">
-                        Legacy Price (MAD) - Temporary
-                    </label>
-
-                    <input
-                        type="number"
-                        id="product-price"
-                        min="0"
-                        step="0.01"
-                        placeholder="Enter legacy price"
-                        required
-                    >
-                </div>
-
-                <!-- Purchase Price -->
-                <div>
-                    <label for="product-purchase-price">
-                        Purchase Price (MAD)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="product-purchase-price"
-                        min="0"
-                        step="0.01"
-                        placeholder="Enter purchase price"
-                    >
-                </div>
-
-                <!-- Selling Price -->
-                <div>
-                    <label for="product-selling-price">
-                        Selling Price (MAD)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="product-selling-price"
-                        min="0"
-                        step="0.01"
-                        placeholder="Enter selling price"
-                    >
-                </div>
-
-                <!-- Minimum Stock -->
-                <div>
-                    <label for="product-min-stock">Minimum Stock</label>
-
-                    <input
-                        type="number"
-                        id="product-min-stock"
-                        min="0"
-                        step="1"
-                        value="5"
-                        required
-                    >
-                </div>
-
-                <!-- Supplier -->
-                <div>
-                    <label for="product-supplier">Supplier</label>
-
-                    <select id="product-supplier">
-                        <option value="">No Supplier</option>
-                    </select>
-                </div>
-
-                <button type="submit">Add Product</button>
-
-            </form>
-
-            <p id="form-message"></p>
-
-        </section>
-
-
-        <!-- ================= 7. PRODUCTS ================= -->
-        <section id="products-section">
-
-            <h2>Products</h2>
-
-            <!-- Search and Filters -->
-            <div class="products-controls">
-
-                <div>
-                    <label for="search-product">Search Product</label>
-
-                    <input
-                        type="search"
-                        id="search-product"
-                        placeholder="Search by product name..."
-                    >
-                </div>
-
-                <div>
-                    <label for="filter-stock-status">
-                        Filter by Stock Status
-                    </label>
-
-                    <select id="filter-stock-status">
-                        <option value="all">All Products</option>
-                        <option value="Normal">Normal</option>
-                        <option value="Low Stock">Low Stock</option>
-                    </select>
-                </div>
-
-                <button type="button" id="reset-filters">
-                    Reset Filters
-                </button>
-
+            <div class="kpi-card">
+                <h3>Quantity Sold</h3>
+                <p id="sales-analytics-total-quantity">0</p>
             </div>
 
-
-            <!-- Products Table -->
-            <div class="table-container">
-
-                <table id="products-table">
-
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Product Name</th>
-                            <th>Quantity</th>
-                            <th>Minimum Stock</th>
-                            <th>Price (MAD)</th>
-                            <th>Supplier</th>
-                            <th>Stock Status</th>
-                            <th>Created At</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="products-table-body">
-                        <tr>
-                            <td colspan="9">Loading products...</td>
-                        </tr>
-                    </tbody>
-
-                </table>
-
+            <div class="kpi-card">
+                <h3>Average Sale Value</h3>
+                <p id="sales-analytics-average-sale">0 MAD</p>
             </div>
 
-        </section>
+        </div>
+        <!-- Daily Sales Trends -->
+        <div class="sales-analytics-chart">
+            <h3>Daily Sales Trends</h3>
+            <canvas id="sales-trends-chart"></canvas>
+        </div>
+        <!-- Best-Selling Products -->
+        <div class="top-selling-products">
+            <h3>Top 5 Best-Selling Products</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity Sold</th>
+                        <th>Total Revenue</th>
+                        <th>Number of Sales</th>
+                    </tr>
+                </thead>
+
+                <tbody id="top-selling-products-body">
+                    <tr>
+                        <td colspan="4">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </section>
 
 
-        <!-- ================= 8. SUPPLIER MANAGEMENT ================= -->
-        <section id="suppliers-section">
+    <!-- ================= 5. PROFIT ANALYTICS ================= -->
+    <section id="profit-section">
 
-            <h2>Supplier Management</h2>
-            <p>Manage your suppliers and their contact information.</p>
+        <h2>Profit Analytics</h2>
+        <p>Monitor revenue, costs and profitability.</p>
 
+        <!-- Date Filters -->
+        <div class="profit-filters">
 
-            <!-- Supplier Form -->
-            <h3 id="supplier-form-title">Add New Supplier</h3>
-
-            <form id="supplier-form">
-
-                <div>
-                    <label for="supplier-name">Supplier Name</label>
-
-                    <input
-                        type="text"
-                        id="supplier-name"
-                        placeholder="Enter supplier name"
-                        required
-                    >
-                </div>
-
-                <div>
-                    <label for="supplier-phone">Phone</label>
-
-                    <input
-                        type="tel"
-                        id="supplier-phone"
-                        placeholder="Enter phone number"
-                    >
-                </div>
-
-                <div>
-                    <label for="supplier-email">Email</label>
-
-                    <input
-                        type="email"
-                        id="supplier-email"
-                        placeholder="Enter email address"
-                    >
-                </div>
-
-                <div>
-                    <label for="supplier-address">Address</label>
-
-                    <input
-                        type="text"
-                        id="supplier-address"
-                        placeholder="Enter supplier address"
-                    >
-                </div>
-
-                <button type="submit" id="supplier-submit-button">
-                    Add Supplier
-                </button>
-
-                <button type="button" id="cancel-supplier-edit" hidden>
-                    Cancel Edit
-                </button>
-
-            </form>
-
-            <p id="supplier-message"></p>
-
-
-            <!-- Suppliers Table -->
-            <h3>Suppliers List</h3>
-
-            <div class="table-container">
-
-                <table id="suppliers-table">
-
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Supplier Name</th>
-                            <th>Phone</th>
-                            <th>Email</th>
-                            <th>Address</th>
-                            <th>Products Count</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="suppliers-table-body">
-                        <tr>
-                            <td colspan="7">Loading suppliers...</td>
-                        </tr>
-                    </tbody>
-
-                </table>
-
+            <div>
+                <label for="profit-start-date">Start Date</label>
+                <input type="date" id="profit-start-date">
             </div>
 
-        </section>
+            <div>
+                <label for="profit-end-date">End Date</label>
+                <input type="date" id="profit-end-date">
+            </div>
 
-    </main>
+            <button type="button" id="filter-profit-btn">
+                Apply Filter
+            </button>
+
+            <button type="button" id="reset-profit-btn">
+                Reset
+            </button>
+
+        </div>
 
 
-    <!-- ================= LIBRARIES ================= -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- Profit Summary -->
+        <h3>Profit Summary</h3>
 
-    <!-- ================= JAVASCRIPT ================= -->
-    <script src="script.js"></script>
+        <div class="stats-container">
+
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <p id="profit-revenue">0 MAD</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Cost</h3>
+                <p id="profit-cost">0 MAD</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Gross Profit</h3>
+                <p id="gross-profit">0 MAD</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Profit Margin</h3>
+                <p id="profit-margin">0%</p>
+            </div>
+
+        </div>
+
+
+        <!-- Profit by Product -->
+        <h3>Profit by Product</h3>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity Sold</th>
+                        <th>Revenue</th>
+                        <th>Cost</th>
+                        <th>Gross Profit</th>
+                        <th>Profit Margin</th>
+                    </tr>
+                </thead>
+
+                <tbody id="profit-products-table">
+                    <tr>
+                        <td colspan="6">Loading profit data...</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- Profit Trends -->
+        <h3>Profit Trends</h3>
+
+        <div class="profit-chart-box">
+            <canvas id="profit-trends-chart"></canvas>
+        </div>
+
+    </section>
+
+
+    <!-- ================= 6. SMART REORDER SUGGESTIONS ================= -->
+    <section id="reorder-section">
+
+        <h2>Smart Reorder Suggestions</h2>
+        <p>Products that need restocking.</p>
+
+        <div id="reorder-suggestions">
+            <p>Loading reorder suggestions...</p>
+        </div>
+
+    </section>
+
+
+    <!-- ================= 7. ADD NEW PRODUCT ================= -->
+    <section id="add-product-section">
+
+        <h2>Add New Product</h2>
+
+        <form id="add-product-form">
+
+            <div>
+                <label for="product-name">Product Name</label>
+                <input
+                    type="text"
+                    id="product-name"
+                    placeholder="Enter product name"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="product-quantity">Quantity</label>
+                <input
+                    type="number"
+                    id="product-quantity"
+                    min="0"
+                    step="1"
+                    placeholder="Enter quantity"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="product-price">
+                    Legacy Price (MAD) - Temporary
+                </label>
+
+                <input
+                    type="number"
+                    id="product-price"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter legacy price"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="product-purchase-price">
+                    Purchase Price (MAD)
+                </label>
+
+                <input
+                    type="number"
+                    id="product-purchase-price"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter purchase price"
+                >
+            </div>
+
+            <div>
+                <label for="product-selling-price">
+                    Selling Price (MAD)
+                </label>
+
+                <input
+                    type="number"
+                    id="product-selling-price"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter selling price"
+                >
+            </div>
+
+            <div>
+                <label for="product-min-stock">Minimum Stock</label>
+
+                <input
+                    type="number"
+                    id="product-min-stock"
+                    min="0"
+                    step="1"
+                    value="5"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="product-supplier">Supplier</label>
+
+                <select id="product-supplier">
+                    <option value="">No Supplier</option>
+                </select>
+            </div>
+
+            <button type="submit">Add Product</button>
+
+        </form>
+
+        <p id="form-message"></p>
+
+    </section>
+
+
+    <!-- ================= 8. PRODUCTS ================= -->
+    <section id="products-section">
+
+        <h2>Products</h2>
+
+        <!-- Search and Filters -->
+        <div class="products-controls">
+
+            <div>
+                <label for="search-product">Search Product</label>
+
+                <input
+                    type="search"
+                    id="search-product"
+                    placeholder="Search by product name..."
+                >
+            </div>
+
+            <div>
+                <label for="filter-stock-status">
+                    Filter by Stock Status
+                </label>
+
+                <select id="filter-stock-status">
+                    <option value="all">All Products</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Low Stock">Low Stock</option>
+                </select>
+            </div>
+
+            <button type="button" id="reset-filters">
+                Reset Filters
+            </button>
+
+        </div>
+
+
+        <!-- Products Table -->
+        <div class="table-container">
+
+            <table id="products-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Minimum Stock</th>
+                        <th>Price (MAD)</th>
+                        <th>Supplier</th>
+                        <th>Stock Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="products-table-body">
+                    <tr>
+                        <td colspan="9">Loading products...</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= 9. SUPPLIER MANAGEMENT ================= -->
+    <section id="suppliers-section">
+
+        <h2>Supplier Management</h2>
+        <p>Manage your suppliers and their contact information.</p>
+
+        <!-- Supplier Form -->
+        <h3 id="supplier-form-title">Add New Supplier</h3>
+
+        <form id="supplier-form">
+
+            <div>
+                <label for="supplier-name">Supplier Name</label>
+
+                <input
+                    type="text"
+                    id="supplier-name"
+                    placeholder="Enter supplier name"
+                    required
+                >
+            </div>
+
+            <div>
+                <label for="supplier-phone">Phone</label>
+
+                <input
+                    type="tel"
+                    id="supplier-phone"
+                    placeholder="Enter phone number"
+                >
+            </div>
+
+            <div>
+                <label for="supplier-email">Email</label>
+
+                <input
+                    type="email"
+                    id="supplier-email"
+                    placeholder="Enter email address"
+                >
+            </div>
+
+            <div>
+                <label for="supplier-address">Address</label>
+
+                <input
+                    type="text"
+                    id="supplier-address"
+                    placeholder="Enter supplier address"
+                >
+            </div>
+
+            <button type="submit" id="supplier-submit-button">
+                Add Supplier
+            </button>
+
+            <button type="button" id="cancel-supplier-edit" hidden>
+                Cancel Edit
+            </button>
+
+        </form>
+
+        <p id="supplier-message"></p>
+
+
+        <!-- Suppliers Table -->
+        <h3>Suppliers List</h3>
+
+        <div class="table-container">
+
+            <table id="suppliers-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Supplier Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Products Count</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="suppliers-table-body">
+                    <tr>
+                        <td colspan="7">Loading suppliers...</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- ================= LIBRARIES ================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script src="script.js"></script>
 
 </body>
 

@@ -7,6 +7,8 @@ const TOP_PRODUCTS_API_URL =
     "http://localhost:3000/api/analytics/top-active-products";
 const SALES_API_URL = "http://localhost:3000/api/sales";
 const PROFIT_API_URL = "http://localhost:3000/api/profit";
+const SALES_ANALYTICS_API_URL =
+    "http://localhost:3000/api/sales-analytics";
 
 
 let allProducts = [];
@@ -16,6 +18,7 @@ let editingSupplierId = null;
 let movementChart = null;
 let movementTrendsChart = null;
 let profitTrendsChart = null;
+let salesTrendsChart = null;
 
 // ------------------------------
 // DOM ELEMENTS
@@ -49,6 +52,20 @@ const saleMessage = document.getElementById("sale-message");
 const totalSalesElement = document.getElementById("total-sales");
 const totalRevenueElement = document.getElementById("total-revenue");
 const salesTableBody = document.getElementById("sales-table-body");
+// SALES ANALYTICS: DOM ELEMENTS
+const salesAnalyticsTotalSales = document.getElementById("sales-analytics-total-sales");
+const salesAnalyticsTotalRevenue = document.getElementById("sales-analytics-total-revenue");
+const salesAnalyticsTotalQuantity = document.getElementById("sales-analytics-total-quantity");
+const salesAnalyticsAverageSale = document.getElementById("sales-analytics-average-sale");
+
+const salesTrendsCanvas = document.getElementById("sales-trends-chart");
+const topSellingProductsBody = document.getElementById("top-selling-products-body");
+
+const salesAnalyticsStartDate = document.getElementById("sales-analytics-start-date");
+const salesAnalyticsEndDate = document.getElementById("sales-analytics-end-date");
+
+const filterSalesAnalyticsButton = document.getElementById("filter-sales-analytics-btn");
+const resetSalesAnalyticsButton = document.getElementById("reset-sales-analytics-btn");
 
 // ------------------------------
 // HELPER: SHOW MESSAGE
@@ -1636,6 +1653,175 @@ if (resetProfitButton) {
 }
 
 // ------------------------------
+// SALES PERFORMANCE ANALYTICS
+// ------------------------------
+
+async function loadSalesSummary(startDate = "", endDate = "") {
+    try {
+        const params = new URLSearchParams();
+
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
+
+        const response = await fetch(
+            `${SALES_ANALYTICS_API_URL}/summary?${params.toString()}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.status !== "success") {
+            throw new Error("Failed to load sales summary.");
+        }
+
+        const data = result.data;
+
+        salesAnalyticsTotalSales.textContent = data.total_sales;
+        salesAnalyticsTotalRevenue.textContent =
+            `${Number(data.total_revenue).toFixed(2)} MAD`;
+
+        salesAnalyticsTotalQuantity.textContent =
+            data.total_quantity_sold;
+
+        salesAnalyticsAverageSale.textContent =
+            `${Number(data.average_sale_value).toFixed(2)} MAD`;
+
+    } catch (error) {
+        console.error("Sales summary error:", error);
+    }
+}
+
+async function loadSalesTrends(startDate = "", endDate = "") {
+    try {
+        const params = new URLSearchParams();
+
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
+
+        const response = await fetch(
+            `${SALES_ANALYTICS_API_URL}/trends?${params.toString()}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.status !== "success") {
+            throw new Error("Failed to load sales trends.");
+        }
+
+        const data = result.data;
+
+        if (salesTrendsChart) {
+            salesTrendsChart.destroy();
+        }
+
+        salesTrendsChart = new Chart(salesTrendsCanvas, {
+            type: "line",
+            data: {
+                labels: data.map(item => item.sale_date),
+                datasets: [{
+                    label: "Daily Revenue (MAD)",
+                    data: data.map(item => item.total_revenue),
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Sales trends error:", error);
+    }
+}
+
+async function loadTopSellingProducts(startDate = "", endDate = "") {
+    try {
+        const params = new URLSearchParams();
+
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
+
+        const response = await fetch(
+            `${SALES_ANALYTICS_API_URL}/top-products?${params.toString()}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.status !== "success") {
+            throw new Error("Failed to load top-selling products.");
+        }
+
+        const products = result.data;
+
+        topSellingProductsBody.innerHTML = "";
+
+        if (products.length === 0) {
+            topSellingProductsBody.innerHTML = `
+                <tr>
+                    <td colspan="4">No sales found.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        products.forEach(product => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${product.product_name}</td>
+                <td>${product.total_quantity_sold}</td>
+                <td>${Number(product.total_revenue).toFixed(2)} MAD</td>
+                <td>${product.total_sales}</td>
+            `;
+
+            topSellingProductsBody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Top-selling products error:", error);
+    }
+}
+
+async function loadSalesAnalytics(startDate = "", endDate = "") {
+    await Promise.all([
+        loadSalesSummary(startDate, endDate),
+        loadSalesTrends(startDate, endDate),
+        loadTopSellingProducts(startDate, endDate)
+    ]);
+}
+
+// SALES ANALYTICS DATE FILTERS
+
+if (filterSalesAnalyticsButton) {
+    filterSalesAnalyticsButton.addEventListener("click", () => {
+        const startDate = salesAnalyticsStartDate.value;
+        const endDate = salesAnalyticsEndDate.value;
+
+        if (startDate && endDate && startDate > endDate) {
+            alert("Start date must be before or equal to end date.");
+            return;
+        }
+
+        loadSalesAnalytics(startDate, endDate);
+    });
+}
+
+if (resetSalesAnalyticsButton) {
+    resetSalesAnalyticsButton.addEventListener("click", () => {
+        salesAnalyticsStartDate.value = "";
+        salesAnalyticsEndDate.value = "";
+
+        loadSalesAnalytics();
+    });
+}
+
+// ------------------------------
 // INITIALIZE APPLICATION
 // ------------------------------
 
@@ -1648,7 +1834,8 @@ async function initializeDashboard() {
         loadMovementTrends(),
         loadTopActiveProducts(),
         loadSales(),
-        loadProfitAnalytics()
+        loadProfitAnalytics(),
+        loadSalesAnalytics()
     ]);
 }
 
