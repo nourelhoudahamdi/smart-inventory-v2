@@ -1549,9 +1549,12 @@ function renderProfitByProduct(products) {
         return;
     }
 
-    products.forEach(product => {
+    products.forEach((product, index) => {
 
         const row = document.createElement("tr");
+        if (index === 0) {
+            row.classList.add("top-profitable-product");
+        }
 
         const values = [
             product.product_name,
@@ -1562,9 +1565,22 @@ function renderProfitByProduct(products) {
             `${Number(product.profit_margin).toFixed(2)}%`
         ];
 
-        values.forEach(value => {
+        values.forEach((value, index) => {
             const cell = document.createElement("td");
             cell.textContent = String(value);
+
+            if (index === 5) {
+                const margin = Number(product.profit_margin);
+
+                if (margin >= 30) {
+                    cell.classList.add("high-profit-margin");
+                } else if (margin >= 10) {
+                    cell.classList.add("medium-profit-margin");
+                } else {
+                    cell.classList.add("low-profit-margin");
+                }
+            }
+
             row.appendChild(cell);
         });
 

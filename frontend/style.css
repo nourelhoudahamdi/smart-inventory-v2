@@ -688,3 +688,31 @@ section h2 {
         grid-template-columns: 1fr;
     }
 }
+
+/* Most Profitable Product */
+.top-profitable-product {
+    background-color: #dcfce7;
+    font-weight: bold;
+}
+
+.top-profitable-product td {
+    border-top: 2px solid #16a34a;
+    border-bottom: 2px solid #16a34a;
+}
+
+/* Profit Margin Indicators */
+
+.high-profit-margin {
+    color: #16a34a;
+    font-weight: bold;
+}
+
+.medium-profit-margin {
+    color: #d97706;
+    font-weight: bold;
+}
+
+.low-profit-margin {
+    color: #dc2626;
+    font-weight: bold;
+}
