@@ -7,6 +7,7 @@ const analyticsRoutes = require("./routes/analyticsRoutes");
 const salesRoutes = require("./routes/salesRoutes");
 const profitRoutes = require("./routes/profitRoutes");
 const salesAnalyticsRoutes = require("./routes/salesAnalyticsRoutes");
+const inventoryPerformanceRoutes = require("./routes/inventoryPerformanceRoutes");
 
 const app = express();
 const PORT = 3000;
@@ -38,6 +39,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/profit", profitRoutes);
 app.use("/api/sales-analytics", salesAnalyticsRoutes);
+app.use("/api/inventory-performance", inventoryPerformanceRoutes);
 
 // Start the server only when this file is run directly
 if (require.main === module) {

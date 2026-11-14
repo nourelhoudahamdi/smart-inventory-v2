@@ -9,6 +9,8 @@ const SALES_API_URL = "http://localhost:3000/api/sales";
 const PROFIT_API_URL = "http://localhost:3000/api/profit";
 const SALES_ANALYTICS_API_URL =
     "http://localhost:3000/api/sales-analytics";
+const INVENTORY_PERFORMANCE_API_URL =
+    "http://localhost:3000/api/inventory-performance";
 
 
 let allProducts = [];
@@ -1837,6 +1839,217 @@ if (resetSalesAnalyticsButton) {
     });
 }
 
+// Load inventory performance summary
+async function loadInventorySummary() {
+    try {
+        const response = await fetch(
+            `${INVENTORY_PERFORMANCE_API_URL}/summary`
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to load inventory summary");
+        }
+
+        const result = await response.json();
+        const data = result.data;
+
+        document.getElementById("inventory-stock-value").textContent =
+            Number(data.total_stock_value).toLocaleString("en-US") + " MAD";
+
+        document.getElementById("inventory-total-products").textContent =
+            data.total_products;
+
+        document.getElementById("inventory-total-units").textContent =
+            data.total_units;
+
+        document.getElementById("inventory-low-stock").textContent =
+            data.low_stock || 0;
+
+        document.getElementById("inventory-out-of-stock").textContent =
+            data.out_of_stock || 0;
+
+    } catch (error) {
+        console.error("Inventory summary error:", error);
+    }
+}
+
+
+// Load inventory alerts
+async function loadInventoryAlerts() {
+    try {
+        const response = await fetch(
+            `${INVENTORY_PERFORMANCE_API_URL}/alerts`
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to load inventory alerts");
+        }
+
+        const result = await response.json();
+
+        const tableBody = document.getElementById(
+            "inventory-alerts-table"
+        );
+
+        if (result.data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4">No inventory alerts. All products are healthy!</td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = result.data.map(product => `
+            <tr>
+                <td>${product.name}</td>
+                <td>${product.quantity}</td>
+                <td>${product.min_stock}</td>
+                <td class="${product.quantity === 0 ? "low-profit-margin" : "medium-profit-margin"}">
+                    ${product.stock_status}
+                </td>
+            </tr>
+        `).join("");
+
+    } catch (error) {
+        console.error("Inventory alerts error:", error);
+    }
+}
+
+// Load slow-moving products
+async function loadSlowMovingProducts() {
+    try {
+        const response = await fetch(
+            `${INVENTORY_PERFORMANCE_API_URL}/slow-moving`
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to load slow-moving products");
+        }
+
+        const result = await response.json();
+
+        const tableBody = document.getElementById(
+            "slow-moving-products-table"
+        );
+
+        if (result.data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5">No slow-moving products found.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = result.data.map(product => {
+
+            const neverSold = product.last_sale_date === null;
+
+            const lastSale = neverSold
+                ? "Never Sold"
+                : new Date(product.last_sale_date).toLocaleDateString();
+
+            const daysSinceLastSale = neverSold
+                ? "N/A"
+                : product.days_since_last_sale;
+
+            const status = neverSold
+                ? "Never Sold"
+                : "Slow-Moving";
+
+            return `
+                <tr>
+                    <td>${product.product_name}</td>
+                    <td>${product.current_stock}</td>
+                    <td>${lastSale}</td>
+                    <td>${daysSinceLastSale}</td>
+                    <td>${status}</td>
+                </tr>
+            `;
+        }).join("");
+
+    } catch (error) {
+        console.error("Slow-moving products error:", error);
+    }
+}
+
+// Load Business Insights
+async function loadBusinessInsights() {
+    try {
+        const [
+            summaryResponse,
+            alertsResponse,
+            slowMovingResponse,
+            topProductsResponse
+        ] = await Promise.all([
+            fetch(`${INVENTORY_PERFORMANCE_API_URL}/summary`),
+            fetch(`${INVENTORY_PERFORMANCE_API_URL}/alerts`),
+            fetch(`${INVENTORY_PERFORMANCE_API_URL}/slow-moving`),
+            fetch(`${SALES_ANALYTICS_API_URL}/top-products`)
+        ]);
+
+        if (
+            !summaryResponse.ok ||
+            !alertsResponse.ok ||
+            !slowMovingResponse.ok ||
+            !topProductsResponse.ok
+        ) {
+            throw new Error("Failed to load business insights");
+        }
+
+        const summaryResult = await summaryResponse.json();
+        const alertsResult = await alertsResponse.json();
+        const slowMovingResult = await slowMovingResponse.json();
+        const topProductsResult = await topProductsResponse.json();
+
+        const summary = summaryResult.data;
+        const alerts = alertsResult.data;
+        const slowMoving = slowMovingResult.data;
+        const topProducts = topProductsResult.data;
+
+        const container = document.getElementById(
+            "business-insights-container"
+        );
+
+        const stockMessage = summary.out_of_stock > 0
+            ? `${summary.out_of_stock} product(s) are out of stock.`
+            : summary.low_stock > 0
+                ? `${summary.low_stock} product(s) have low stock.`
+                : "Stock levels are healthy.";
+
+        const bestProduct = topProducts.length > 0
+            ? `${topProducts[0].product_name} (${topProducts[0].total_quantity_sold} units sold)`
+            : "No sales recorded yet.";
+
+        container.innerHTML = `
+            <div class="business-insight-card">
+                <h4>Stock Health</h4>
+                <p>${stockMessage}</p>
+            </div>
+
+            <div class="business-insight-card">
+                <h4>Slow-Moving Products</h4>
+                <p>${slowMoving.length} product(s) have no sales in the last 30 days.</p>
+            </div>
+
+            <div class="business-insight-card">
+                <h4>Best-Selling Product</h4>
+                <p>${bestProduct}</p>
+            </div>
+
+            <div class="business-insight-card">
+                <h4>Total Stock Value</h4>
+                <p>${Number(summary.total_stock_value).toLocaleString("en-US")} MAD</p>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error("Business Insights error:", error);
+    }
+}
+
+
 // ------------------------------
 // INITIALIZE APPLICATION
 // ------------------------------
@@ -1851,7 +2064,11 @@ async function initializeDashboard() {
         loadTopActiveProducts(),
         loadSales(),
         loadProfitAnalytics(),
-        loadSalesAnalytics()
+        loadSalesAnalytics(),
+        loadInventorySummary(),
+        loadInventoryAlerts(),
+        loadSlowMovingProducts(),
+        loadBusinessInsights()
     ]);
 }
 

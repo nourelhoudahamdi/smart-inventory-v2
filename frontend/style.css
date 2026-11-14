@@ -716,3 +716,29 @@ section h2 {
     color: #dc2626;
     font-weight: bold;
 }
+
+/* Inventory Performance Tables */
+
+#inventory-performance-section .table-container table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+#inventory-performance-section .table-container th,
+#inventory-performance-section .table-container td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+#inventory-performance-section .table-container th {
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 600;
+}
+
+#inventory-performance-section .table-container tbody tr:hover {
+    background: #f8fafc;
+}
