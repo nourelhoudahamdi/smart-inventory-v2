@@ -2,6 +2,7 @@
 node_modules/
 
 # Local database
+database/*.db
 database/inventory.db
 database/inventory.db-shm
 database/inventory.db-wal
