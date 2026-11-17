@@ -2,6 +2,15 @@ const db = process.env.NODE_ENV === "test"
     ? require("../../tests/test-database")
     : require("../../database/database");
 
+// Validate product name (1 to 100 characters)
+const isValidProductName = (name) => {
+    return (
+        typeof name === "string" &&
+        name.trim().length >= 1 &&
+        name.trim().length <= 100
+    );
+};
+
 // Validate optional prices
 const isValidOptionalPrice = (price) => {
     return (
@@ -70,7 +79,17 @@ const isValidSupplier = (supplierId) => {
 // Create a product
 const createProduct = (req, res) => {
     try {
-        
+        if (
+            !req.body ||
+            typeof req.body !== "object" ||
+            Array.isArray(req.body)
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid product information."
+            });
+        }
+
         const {
             name,
             quantity,
@@ -85,8 +104,7 @@ const createProduct = (req, res) => {
             : req.body.min_stock;
 
         if (
-            typeof name !== "string" ||
-            name.trim() === "" ||
+            !isValidProductName(name) ||
             !Number.isInteger(quantity) ||
             quantity < 0 ||
             typeof price !== "number" ||
@@ -157,6 +175,17 @@ const createProduct = (req, res) => {
 // Update a product
 const updateProduct = (req, res) => {
     try {
+        if (
+            !req.body ||
+            typeof req.body !== "object" ||
+            Array.isArray(req.body)
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid product information."
+            });
+        }
+
         const id = Number(req.params.id);
 
         const { name, quantity, price } = req.body;
@@ -200,8 +229,7 @@ const updateProduct = (req, res) => {
             : req.body.selling_price;
 
         if (
-            typeof name !== "string" ||
-            name.trim() === "" ||
+            !isValidProductName(name) ||
             !Number.isInteger(quantity) ||
             quantity < 0 ||
             typeof price !== "number" ||

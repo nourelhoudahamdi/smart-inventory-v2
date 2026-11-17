@@ -235,6 +235,37 @@ test("POST /api/products rejects a negative price", async (t) => {
     assert.equal(response.status, 400);
 });
 
+test("POST /api/products rejects a product name longer than 100 characters", async (t) => {
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) reject(error);
+            else resolve();
+        });
+    }));
+
+    const address = server.address();
+
+    const response = await fetch(
+        `http://127.0.0.1:${address.port}/api/products`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: "A".repeat(101),
+                quantity: 10,
+                price: 99.99
+            })
+        }
+    );
+
+    assert.equal(response.status, 400);
+});
 
 test("PUT /api/products updates an existing product", async (t) => {
     const db = require("./test-database");
@@ -1472,4 +1503,65 @@ test("POST /api/sales rejects products with missing prices", async (t) => {
     ).get(productId);
 
     assert.equal(updatedProduct.quantity, 10);
+});
+
+test("POST /api/products rejects malformed JSON", async (t) => {
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve) => server.close(resolve)));
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/products`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: '{"name":'
+        }
+    );
+
+    assert.equal(response.status, 400);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "error");
+    assert.equal(body.message, "Invalid JSON format.");
+});
+
+
+test("POST /api/products rejects JSON payloads larger than 10KB", async (t) => {
+    const server = app.listen(0);
+
+    await new Promise((resolve) => server.once("listening", resolve));
+
+    t.after(() => new Promise((resolve) => server.close(resolve)));
+
+    const response = await fetch(
+        `http://127.0.0.1:${server.address().port}/api/products`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: "Test Product",
+                quantity: 10,
+                price: 99.99,
+                extra: "A".repeat(11000)
+            })
+        }
+    );
+
+    assert.equal(response.status, 413);
+
+    const body = await response.json();
+
+    assert.equal(body.status, "error");
+    assert.equal(
+        body.message,
+        "Request payload is too large. Maximum size is 10KB."
+    );
 });
